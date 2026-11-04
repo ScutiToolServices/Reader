@@ -1,0 +1,40 @@
+# UnlimitedOCR document OCR MCP server.
+# Start:  docker compose up -d --build        (armory reaches it at http://ocr:8092/mcp)
+# Needs a .env next to this file with INTERNAL_API_TOKEN (same value as Citadel's); see .env.example.
+# The model runs in SGLangModel (AI/ModelServices/SGLangModel); set OCR_BACKEND_URL and OCR_BACKEND_TOKEN to reach it.
+
+name: ocr
+
+services:
+  ocr:
+    build: .
+    restart: unless-stopped
+    environment:
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN in .env}
+      OCR_BACKEND_URL: ${OCR_BACKEND_URL:-http://host.docker.internal:9210}
+      OCR_BACKEND_TOKEN: ${OCR_BACKEND_TOKEN:-}
+      OCR_ADMIN_PASSWORD: ${OCR_ADMIN_PASSWORD:-}
+      OCR_MAX_PAGES: ${OCR_MAX_PAGES:-30}
+      OCR_TIMEOUT_S: ${OCR_TIMEOUT_S:-110}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${OCR_BIND:-0.0.0.0}:${OCR_PORT:-8092}:8092"
+    volumes:
+      - ocr_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/health')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+    networks: [citadel]
+
+volumes:
+  ocr_data:
+
+networks:
+  # Join the Citadel stack's network so armory/ember_api can reach http://ocr:8092. Start the Citadel stack first:
+  # it creates this network.
+  citadel:
+    name: citadel_core
+    external: true
