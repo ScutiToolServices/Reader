@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `POST /api/parse` accepts an owned `file_id` with the existing public token and requester headers and returns the same parse result as the MCP tool.
+
+- Admin **Try it** panel sends real public API requests with a requester username, readable status/errors, latency, cancellation, media/text results and redacted curl. Auth choice (b): the public token stays in memory, separate from admin auth; existing quotas, ownership and caches apply.
+
 - Admin page: status, usage per user, and the SGLangModel address and token (changeable live, with a Test connection button), next to the settings.
 
 ## 0.1.0

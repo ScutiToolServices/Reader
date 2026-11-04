@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+import pytest
 from starlette.testclient import TestClient
 
 from src.app import build_app
@@ -47,6 +48,52 @@ def test_upload_needs_token_when_configured(settings):
     assert c.post("/api/files", content=png(), headers=ANN).status_code == 401
     assert c.post("/api/files", content=png(), headers={**ANN, "X-Internal-Token": "secret"}).status_code == 200
     assert c.get("/health").status_code == 200
+
+
+def test_parse_enforces_public_token_and_requester_identity(settings):
+    c = make(settings, internal_token="secret")
+    body = {"file_id": "a" * 32}
+    assert c.post("/api/parse", json=body, headers=ANN).status_code == 401
+    assert c.post("/api/parse", json=body, headers={"X-Internal-Token": "secret"}).status_code == 401
+
+
+def test_parse_reuses_owned_document_cache_and_counts_usage(settings):
+    engine = FakeEngine()
+    c = TestClient(build_app(replace(settings, admin_password="pw"), engine))
+    file_id = c.post("/api/files", content=png(), headers=ANN).json()["file_id"]
+    first = c.post("/api/parse", json={"file_id": file_id}, headers=ANN)
+    assert first.status_code == 200
+    assert first.json()["text"] == "<PAGE>first page<PAGE>second page"
+    assert first.json()["pages"] == ["first page", "second page"]
+    assert first.json()["cached"] is False
+    assert c.post("/api/parse", json={"file_id": file_id}, headers=ANN).json()["cached"] is True
+    assert engine.parse_calls == 1
+    wrong_owner = c.post("/api/parse", json={"file_id": file_id}, headers={"X-Requester-Username": "bob"})
+    assert wrong_owner.status_code == 404 and wrong_owner.json()["error"] == "file_not_found"
+    status = c.get("/admin/status", headers={"X-Admin-Password": "pw"}).json()
+    assert status["usage"]["calls"] == 3
+    assert status["usage"]["errors"] == 1
+    assert status["usage"]["tools"] == {"parse": 3}
+
+
+@pytest.mark.parametrize("body", [{}, {"file_id": 1}, {"file_id": "../x"}, {"file_id": "a" * 32, "owner": "bob"}])
+def test_parse_rejects_invalid_body(settings, body):
+    assert make(settings).post("/api/parse", json=body, headers=ANN).status_code == 422
+
+
+def test_parse_rejects_invalid_json_and_oversize_body(settings):
+    c = make(settings)
+    assert c.post("/api/parse", content=b"invalid", headers=ANN).status_code == 422
+    assert c.post("/api/parse", content=b" " * 4097, headers=ANN).status_code == 413
+
+
+@pytest.mark.parametrize("engine_status,expected", [(503, 503), (422, 400)])
+def test_parse_maps_service_failures_without_backend_text(settings, engine_status, expected):
+    c = TestClient(build_app(settings, FakeEngine(status=engine_status)))
+    file_id = c.post("/api/files", content=png(), headers=ANN).json()["file_id"]
+    response = c.post("/api/parse", json={"file_id": file_id}, headers=ANN)
+    assert response.status_code == expected
+    assert "backend said no" not in response.text
 
 
 def test_the_admin_page_is_off_without_a_password(settings):
