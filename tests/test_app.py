@@ -1,0 +1,64 @@
+from dataclasses import replace
+
+from starlette.testclient import TestClient
+
+from src.app import build_app
+from tests.conftest import FakeEngine, pdf, png
+
+ANN = {"X-Requester-Username": "ann"}
+
+
+def make(settings, **changes):
+    return TestClient(build_app(replace(settings, **changes), FakeEngine()))
+
+
+def test_health(settings):
+    assert make(settings).get("/health").json() == {"ok": True, "ready": True}
+
+
+def test_upload_requires_identity(settings):
+    assert make(settings).post("/api/files", content=png()).status_code == 401
+
+
+def test_upload_ok(settings):
+    response = make(settings).post("/api/files", content=pdf(3), headers={**ANN, "X-Filename": "../../a.pdf"})
+    body = response.json()
+    assert response.status_code == 200 and len(body["file_id"]) == 32
+    assert body["page_count"] == 3 and body["size_bytes"] > 0 and body["expires_at"] > 0
+
+
+def test_upload_rejects_bad_files_and_too_many_pages(settings):
+    c = make(settings)
+    assert c.post("/api/files", content=b"hello", headers=ANN).status_code == 400
+    assert c.post("/api/files", content=pdf(11), headers=ANN).status_code == 400
+
+
+def test_upload_over_byte_cap_is_413(settings):
+    assert make(settings, max_bytes=10).post("/api/files", content=png(), headers=ANN).status_code == 413
+
+
+def test_upload_over_quota_is_413(settings):
+    response = make(settings, quota_bytes=10).post("/api/files", content=png(), headers=ANN)
+    assert response.status_code == 413 and response.json()["error"] == "quota_exceeded"
+
+
+def test_upload_needs_token_when_configured(settings):
+    c = make(settings, internal_token="secret")
+    assert c.post("/api/files", content=png(), headers=ANN).status_code == 401
+    assert c.post("/api/files", content=png(), headers={**ANN, "X-Internal-Token": "secret"}).status_code == 200
+    assert c.get("/health").status_code == 200
+
+
+def test_the_admin_page_is_off_without_a_password(settings):
+    assert make(settings).get("/admin/settings").status_code in (404, 405)
+
+
+def test_the_admin_settings_need_the_password_and_can_be_changed(settings):
+    c = make(settings, admin_password="pw")
+    assert c.get("/admin/settings").status_code == 401
+    shown = c.get("/admin/settings", headers={"X-Admin-Password": "pw"}).json()
+    assert shown["service"] == "UnlimitedOCR" and {row["key"] for row in shown["settings"]} >= {"max_pages", "dpi", "crop_mode"}
+    saved = c.put("/admin/settings", json={"values": {"max_pages": 2}}, headers={"X-Admin-Password": "pw"})
+    assert saved.status_code == 200
+    assert c.post("/api/files", content=pdf(3), headers=ANN).status_code == 400  # the new limit applies at once
+    assert c.put("/admin/settings", json={"values": {"max_pages": 0}}, headers={"X-Admin-Password": "pw"}).status_code == 422
