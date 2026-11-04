@@ -12,9 +12,12 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
+from collections.abc import Callable
 from typing import Any
 
 import httpx
+
+from src.admin_api import ProbeError, check
 
 _log = logging.getLogger(__name__)
 
@@ -90,14 +93,23 @@ def split_pages(text: str) -> list[str]:
 
 
 class OCREngine:
-    """`http` is an httpx client (a test passes a mock transport)."""
+    """`http` is an httpx client (a test passes a mock transport). `source` returns (url, token) of the SGLangModel
+    service on every call, so the admin page can change it live; without it the constructor's address stays."""
 
-    def __init__(self, backend_url: str = "http://127.0.0.1:9210", token: str = "", *, http: httpx.AsyncClient | None = None) -> None:
+    def __init__(self, backend_url: str = "http://127.0.0.1:9210", token: str = "", *, http: httpx.AsyncClient | None = None,
+                 source: Callable[[], tuple[str, str] | None] | None = None) -> None:
         self.model = MODEL_NAME
-        self.backend_url = backend_url.rstrip("/")
-        self._headers = {"X-Internal-Token": token} if token else {}
+        self._source = source or (lambda: (backend_url.rstrip("/"), token))
         self._http = http or httpx.AsyncClient(timeout=httpx.Timeout(6000, connect=10))
         self.ready = False  # the backend answered its last health probe
+
+    def _target(self) -> tuple[str, dict[str, str]]:
+        found = self._source()
+        if not found:
+            self.ready = False
+            raise EngineError("No SGLangModel address is set (the admin page or OCR_BACKEND_URL)", 503)
+        url, token = found
+        return url, ({"X-Internal-Token": token} if token else {})
 
     async def close(self) -> None:
         await self._http.aclose()
@@ -105,9 +117,10 @@ class OCREngine:
     async def probe(self) -> bool:
         """Asks the backend if it is up and ready, and updates `ready`."""
         try:
-            reply = await self._http.get(f"{self.backend_url}/health", timeout=3)
+            url, _ = self._target()
+            reply = await self._http.get(f"{url}/health", timeout=3)
             self.ready = reply.status_code == 200 and reply.json().get("ready") is True
-        except (httpx.HTTPError, ValueError, AttributeError):
+        except (httpx.HTTPError, ValueError, AttributeError, EngineError):
             self.ready = False
         return self.ready
 
@@ -124,8 +137,9 @@ class OCREngine:
             "custom_params": {"ngram_size": NGRAM_SIZE, "window_size": 1024 if len(images) > 1 else 128,
                               "page_token_id": PAGE_TOKEN_ID, "eos_token_id": EOS_TOKEN_ID, "max_page_tokens": MAX_PAGE_TOKENS},
         }
+        url, headers = self._target()
         try:
-            reply = await self._http.post(f"{self.backend_url}/v1/chat/completions", json=payload, headers=self._headers)
+            reply = await self._http.post(f"{url}/v1/chat/completions", json=payload, headers=headers)
         except httpx.HTTPError as error:
             self.ready = False
             raise EngineError(f"SGLangModel is not reachable ({type(error).__name__})", 503) from None
@@ -140,3 +154,15 @@ class OCREngine:
         except (ValueError, KeyError, IndexError, TypeError):
             raise EngineError("SGLangModel sent an answer this service cannot read", 502) from None
         return {"text": text, "pages": split_pages(text), "page_count": len(images)}
+
+
+async def probe_sglang(url: str, token: str) -> str:
+    """The admin page's Test button for a SGLangModel address: reachable and ready, then the token on the model list."""
+    health = await check(url, "", "/health")
+    reply = await check(url, token, "/v1/models")
+    try:
+        reply.json()["data"]
+    except (ValueError, KeyError, TypeError):
+        raise ProbeError("That address is not a SGLangModel service.") from None
+    ready = health.json().get("ready") is True if health.headers.get("content-type", "").startswith("application/json") else False
+    return "Connected, token accepted." + ("" if ready else " The model is still loading.")

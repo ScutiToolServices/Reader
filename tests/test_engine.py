@@ -82,3 +82,38 @@ def test_probe_tracks_the_backend():
     assert asyncio.run(backend_engine().probe()) is True
     assert asyncio.run(backend_engine(backend_ready=False).probe()) is False
     assert asyncio.run(backend_engine(up=False).probe()) is False
+
+
+def test_the_address_is_read_on_every_call_and_an_empty_one_is_a_clear_error():
+    import httpx
+
+    from src.engine import OCREngine
+
+    target = {"now": ("http://a:9210", "t1")}
+    engine = OCREngine(source=lambda: target["now"])
+    assert engine._target() == ("http://a:9210", {"X-Internal-Token": "t1"})
+    target["now"] = ("http://b:9210", "")
+    assert engine._target() == ("http://b:9210", {})
+    target["now"] = None
+    with pytest.raises(EngineError, match="No SGLangModel address") as raised:
+        engine._target()
+    assert raised.value.status == 503
+    assert asyncio.run(engine.probe()) is False  # probing with no address is not ready, not a crash
+
+
+async def test_probe_sglang_checks_health_then_the_token_on_the_model_list(monkeypatch):
+    import httpx
+
+    from src.engine import probe_sglang
+
+    real, seen = httpx.AsyncClient, []
+
+    def handler(request):
+        seen.append((request.url.path, request.headers.get("X-Internal-Token")))
+        if request.url.path == "/health":
+            return httpx.Response(200, json={"ok": True, "ready": False})
+        return httpx.Response(200, json={"data": [{"id": "m"}]})
+
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
+    assert await probe_sglang("http://s:9210", "tok") == "Connected, token accepted. The model is still loading."
+    assert seen == [("/health", None), ("/v1/models", "tok")]

@@ -36,3 +36,12 @@ Ember also needs an upload route like Scribe's (`POST /api/attachments/audio`) t
 ### Releasing
 
 A plain publish (`tools\deploy.bat` option 1) only updates the `live` branch, so it is fine for test deploys. A release is a separate step: set `VERSION` (and `pyproject.toml`, to the same number), commit, then run `tools\deploy.bat` option R or `py tools\publish_live.py --release`. That publishes to `live` and tags the `main` commit `vX.Y.Z` and the live commit `live-vX.Y.Z`. `tools\make_zip.bat` then builds `zip_versions\UnlimitedOCR-<VERSION>.zip` and opens GitHub's new-release page for the tag.
+
+## Admin page
+
+With `OCR_ADMIN_PASSWORD` set, `/admin/` (header `X-Admin-Password`) has four parts:
+
+- **Status**: what the service runs and for how long, plus the model and whether SGLangModel is ready.
+- **Usage**: calls, errors and average time per user since the service started (kept in memory, so a restart clears it).
+- **Model services**: the `SGLangModel` address and token (`OCR_BACKEND_URL`, `OCR_BACKEND_TOKEN` are only the starting values). This service holds no model, so it has no local option. Pick **In this service** or **A model service**, set the address and token, press **Test connection** (it calls the other service with that token), then **Save**. A change applies to the next call; the token is stored in `.data/backends.json`, never shown again, and `Use the environment value` drops the saved one.
+- **Settings**: the options saved in `.data/settings.json`.

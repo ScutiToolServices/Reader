@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Admin page: status, usage per user, and the SGLangModel address and token (changeable live, with a Test connection button), next to the settings.
+
 ## 0.1.0
 
 - First version: MCP server `ocr` with one tool, `tool_ocr_parse(file_id)`, and a document upload route (`POST /api/files`), like Scribe for audio.
