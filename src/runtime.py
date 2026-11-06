@@ -1,6 +1,6 @@
 """Settings changed on the admin page, kept in a JSON file in the data folder so they survive a restart.
 
-The first half (load .. Config) is the same file in Bard, Scribe and UnlimitedOCR, and a copy of Laya's `settings.py`; keep them
+The first half (load .. Config) is the same file in Bard, Scribe and Reader, and a copy of Laya's `settings.py`; keep them
 in step. `options.py` holds what is specific to a service."""
 
 from __future__ import annotations

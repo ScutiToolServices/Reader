@@ -104,7 +104,7 @@ def test_the_admin_settings_need_the_password_and_can_be_changed(settings):
     c = make(settings, admin_password="pw")
     assert c.get("/admin/settings").status_code == 401
     shown = c.get("/admin/settings", headers={"X-Admin-Password": "pw"}).json()
-    assert shown["service"] == "UnlimitedOCR" and {row["key"] for row in shown["settings"]} >= {"max_pages", "dpi", "crop_mode"}
+    assert shown["service"] == "Reader" and {row["key"] for row in shown["settings"]} >= {"max_pages", "dpi", "crop_mode"}
     saved = c.put("/admin/settings", json={"values": {"max_pages": 2}}, headers={"X-Admin-Password": "pw"})
     assert saved.status_code == 200
     assert c.post("/api/files", content=pdf(3), headers=ANN).status_code == 400  # the new limit applies at once
@@ -116,7 +116,7 @@ def test_the_admin_page_shows_status_usage_and_the_ocr_slot(settings):
     pw = {"X-Admin-Password": "pw"}
     assert c.get("/admin/status").status_code == 401
     body = c.get("/admin/status", headers=pw).json()
-    assert body["service"] == "UnlimitedOCR" and {"label": "SGLangModel", "value": "ready"} in body["items"]
+    assert body["service"] == "Reader" and {"label": "SGLangModel", "value": "ready"} in body["items"]
     slot = c.get("/admin/backends", headers=pw).json()["backends"][0]
     assert (slot["key"], slot["mode"], slot["url"], slot["local"], slot["source"]) == ("ocr", "remote", "http://env:9210", False, "environment")
     assert c.put("/admin/backends/ocr", headers=pw, json={"url": ""}).status_code == 422  # there is no local OCR engine

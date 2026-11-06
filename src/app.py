@@ -1,4 +1,4 @@
-"""The UnlimitedOCR server: one MCP tool, a document upload route and a health check."""
+"""The Reader server: one MCP tool, a document upload route and a health check."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from src.runtime import Config
 from src.service import OCRService
 from src.store import DocumentStore
 
-WEB_DIR = Path(os.environ.get("OCR_WEB_DIR") or PROJECT_DIR / "web")
+WEB_DIR = Path(os.environ.get("READER_WEB_DIR") or PROJECT_DIR / "web")
 
 PLAYGROUND = {"operations": [{
     "label": "Read document", "route": "/api/files", "method": "POST", "encoding": "raw", "response": "json",
@@ -57,7 +57,7 @@ INSTRUCTIONS = (
 
 
 def build_app(settings: Settings, engine: OCREngine | None = None, config: Config | None = None) -> Starlette:
-    """`config` (default: from OCR_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
+    """`config` (default: from READER_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
     changeable on /admin/ while running; without it they stay as the environment set them."""
     config = config if config is not None else make_config(settings)
     base, settings = settings, live(settings, config)
@@ -147,7 +147,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
         return [{"label": "Model", "value": engine.model}, {"label": "SGLangModel", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
-        register(mcp, service="UnlimitedOCR", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
+        register(mcp, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
                  playground=PLAYGROUND, slots=[
             Slot("ocr", "Document OCR", "The SGLangModel service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
                  "so it always needs an address.", probe_sglang, "http://127.0.0.1:9210", local=False),
@@ -169,7 +169,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
                     await asyncio.to_thread(config.set, values)
                 except ValueError as error:
                     return JSONResponse({"detail": str(error)}, status_code=422)
-            return JSONResponse({"service": "UnlimitedOCR", "settings": config.describe()})
+            return JSONResponse({"service": "Reader", "settings": config.describe()})
 
     app = mcp.streamable_http_app()
     if config is not None and WEB_DIR.is_dir():

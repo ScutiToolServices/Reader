@@ -1,4 +1,4 @@
-"""The UnlimitedOCR options the admin page can change. The default shown is the value at start (.env or built in), which
+"""The Reader options the admin page can change. The default shown is the value at start (.env or built in), which
 load_settings already read; a saved value wins over it."""
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def schema(base: Settings) -> list[Setting]:
 
 
 def make_config(base: Settings) -> Config | None:
-    """None, so nothing is changeable at run time, unless OCR_ADMIN_PASSWORD is set."""
+    """None, so nothing is changeable at run time, unless READER_ADMIN_PASSWORD is set."""
     return Config(base.data_dir / "settings.json", schema(base)) if base.admin_password else None
 
 

@@ -1,4 +1,4 @@
-# UnlimitedOCR: the admin web UI
+# Reader: the admin web UI
 
 With the service's admin password configured, open `/admin/` and sign in to manage status, model backends and settings. Public request authentication remains separate from that admin password.
 

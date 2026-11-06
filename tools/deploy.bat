@@ -9,7 +9,7 @@ rem tools\deploy.local.bat (copy tools\deploy.local.example.bat) so the address 
 setlocal enabledelayedexpansion
 if exist "%~dp0deploy.local.bat" call "%~dp0deploy.local.bat"
 if not defined DEPLOY_HOST set "DEPLOY_HOST=lex@scutiserver1.local"
-if not defined DEPLOY_DIR set "DEPLOY_DIR=/media/ZimaOS-HD/Apps/UnlimitedOCR"
+if not defined DEPLOY_DIR set "DEPLOY_DIR=/media/ZimaOS-HD/Apps/Reader"
 if not defined DEPLOY_WEB_PORT set "DEPLOY_WEB_PORT=7681"
 set "ROOT=%~dp0.."
 
@@ -74,7 +74,7 @@ echo Done.
 call :reminder ".env is on the server. In the web terminal:" "docker compose up -d --build" "(run git pull here first if the code changed)"
 exit /b 0
 
-rem :add <path relative to the UnlimitedOCR root, same path on the server>
+rem :add <path relative to the Reader root, same path on the server>
 :add
 if not exist "%ROOT%\%~1" (echo skip    %~1 ^(missing locally^) & exit /b 0)
 >>"%LIST%" echo %~1

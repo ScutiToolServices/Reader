@@ -1,5 +1,5 @@
 [project]
-name = "unlimited-ocr"
+name = "reader"
 version = "0.1.0"
 description = "Document OCR MCP server for Citadel and Ember (Baidu Unlimited OCR 2 through SGLangModel)"
 requires-python = ">=3.11"

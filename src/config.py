@@ -1,4 +1,4 @@
-"""UnlimitedOCR settings, read from the environment (and a local .env, never committed)."""
+"""Reader settings, read from the environment (and a local .env, never committed)."""
 
 from __future__ import annotations
 
@@ -49,20 +49,20 @@ def load_settings() -> Settings:
     load_dotenv(PROJECT_DIR / ".env")
     env = os.environ.get
     return Settings(
-        host=env("OCR_HOST", "127.0.0.1"),
-        port=int(env("OCR_PORT", "8092")),
+        host=env("READER_HOST", "127.0.0.1"),
+        port=int(env("READER_PORT", "8092")),
         internal_token=env("INTERNAL_API_TOKEN", ""),
-        data_dir=Path(env("OCR_DATA_DIR") or PROJECT_DIR / ".data"),
-        backend_url=env("OCR_BACKEND_URL", "http://127.0.0.1:9210"),
-        backend_token=env("OCR_BACKEND_TOKEN", ""),
-        max_bytes=int(env("OCR_MAX_UPLOAD_MB", "50")) * 1024 * 1024,
-        max_pages=int(env("OCR_MAX_PAGES", "30")),
-        timeout_s=int(env("OCR_TIMEOUT_S", "110")),
-        dpi=int(env("OCR_DPI", "300")),
-        tokens_per_page=int(env("OCR_TOKENS_PER_PAGE", "8000")),
-        crop_mode=env("OCR_CROP_MODE", "1").strip().lower() in ("1", "true", "yes", "on"),
-        ttl_seconds=int(env("OCR_TTL_HOURS", "24")) * 3600,
-        quota_bytes=int(env("OCR_QUOTA_MB", "200")) * 1024 * 1024,
-        concurrency=int(env("OCR_CONCURRENCY", "1")),
-        admin_password=env("OCR_ADMIN_PASSWORD", ""),
+        data_dir=Path(env("READER_DATA_DIR") or PROJECT_DIR / ".data"),
+        backend_url=env("READER_BACKEND_URL", "http://127.0.0.1:9210"),
+        backend_token=env("READER_BACKEND_TOKEN", ""),
+        max_bytes=int(env("READER_MAX_UPLOAD_MB", "50")) * 1024 * 1024,
+        max_pages=int(env("READER_MAX_PAGES", "30")),
+        timeout_s=int(env("READER_TIMEOUT_S", "110")),
+        dpi=int(env("READER_DPI", "300")),
+        tokens_per_page=int(env("READER_TOKENS_PER_PAGE", "8000")),
+        crop_mode=env("READER_CROP_MODE", "1").strip().lower() in ("1", "true", "yes", "on"),
+        ttl_seconds=int(env("READER_TTL_HOURS", "24")) * 3600,
+        quota_bytes=int(env("READER_QUOTA_MB", "200")) * 1024 * 1024,
+        concurrency=int(env("READER_CONCURRENCY", "1")),
+        admin_password=env("READER_ADMIN_PASSWORD", ""),
     )

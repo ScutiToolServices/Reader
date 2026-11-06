@@ -25,7 +25,7 @@ class OCRService:
 
     async def upload(self, owner: str, filename: str, data: bytes) -> tuple[StoredDoc, float]:
         if not owner:
-            raise IdentityRequired("UnlimitedOCR needs to know who is asking.")
+            raise IdentityRequired("Reader needs to know who is asking.")
         try:
             pages = await asyncio.to_thread(page_count, data, self._settings.max_pages)
         except EngineError as error:
@@ -37,7 +37,7 @@ class OCRService:
 
     async def parse(self, owner: str, file_id: str) -> ParseResult:
         if not owner:
-            raise IdentityRequired("UnlimitedOCR needs to know who is asking.")
+            raise IdentityRequired("Reader needs to know who is asking.")
         key = (owner, file_id)
         lock = self._locks.setdefault(key, asyncio.Lock())
         try:
