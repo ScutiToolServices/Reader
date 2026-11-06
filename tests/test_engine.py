@@ -64,7 +64,7 @@ def test_the_token_is_sent_and_a_refusal_is_reported():
     assert engine.headers[-1]["x-internal-token"] == "sglm_abc"
     with pytest.raises(EngineError) as error:
         asyncio.run(backend_engine(status=401).parse(png(), **OPTIONS))
-    assert error.value.status == 502 and "READER_BACKEND_TOKEN" in str(error.value)
+    assert error.value.status == 502 and "admin page" in str(error.value)
 
 
 def test_a_backend_error_becomes_502_a_loading_backend_503_and_a_dead_one_503():

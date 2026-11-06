@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -18,9 +20,8 @@ class Settings:
     port: int = 8092
     internal_token: str = ""
     data_dir: Path = PROJECT_DIR / ".data"
+    config_dir: Path | None = None  # set when the data folder was moved: the folder that keeps settings.json
     # SGLangModel (AI/ModelServices/SGLangModel), which holds the model on the GPU.
-    backend_url: str = "http://127.0.0.1:9210"
-    backend_token: str = ""
     max_bytes: int = 50 * 1024 * 1024
     # Armory cancels a tool call after 120 s, so the page limit and the time limit are tuned together. Measure on the real
     # GPU host (nothing has run against the model yet) and raise both after that.
@@ -36,6 +37,11 @@ class Settings:
     admin_password: str = ""
 
     @property
+    def state_dir(self) -> Path:
+        """Where settings.json and backends.json live: the first data folder, even after the data folder was moved."""
+        return self.config_dir or self.data_dir
+
+    @property
     def docs_dir(self) -> Path:
         return self.data_dir / "docs"
 
@@ -45,7 +51,7 @@ class Settings:
         return not self.internal_token and self.host not in LOOPBACK_HOSTS
 
 
-def load_settings() -> Settings:
+def _from_environment() -> Settings:
     load_dotenv(PROJECT_DIR / ".env")
     env = os.environ.get
     return Settings(
@@ -53,8 +59,6 @@ def load_settings() -> Settings:
         port=int(env("READER_PORT", "8092")),
         internal_token=env("INTERNAL_API_TOKEN", ""),
         data_dir=Path(env("READER_DATA_DIR") or PROJECT_DIR / ".data"),
-        backend_url=env("READER_BACKEND_URL", "http://127.0.0.1:9210"),
-        backend_token=env("READER_BACKEND_TOKEN", ""),
         max_bytes=int(env("READER_MAX_UPLOAD_MB", "50")) * 1024 * 1024,
         max_pages=int(env("READER_MAX_PAGES", "30")),
         timeout_s=int(env("READER_TIMEOUT_S", "110")),
@@ -66,3 +70,31 @@ def load_settings() -> Settings:
         concurrency=int(env("READER_CONCURRENCY", "1")),
         admin_password=env("READER_ADMIN_PASSWORD", ""),
     )
+
+
+def with_saved_data_path(settings: Settings) -> Settings:
+    """The admin page's "Data folder" setting moves stored data (audio, uploads, voices, results) to another folder.
+    It is read once, here at start. Settings and saved model connections stay in the first folder, which is where this
+    value is saved. A folder that cannot be written is ignored."""
+    try:
+        saved = json.loads((settings.data_dir / "settings.json").read_text("utf-8")).get("data_path")
+    except (OSError, ValueError, AttributeError):
+        return settings
+    if not isinstance(saved, str) or not saved.strip():
+        return settings
+    target = Path(saved.strip()).expanduser()
+    if not target.is_absolute():
+        target = PROJECT_DIR / target
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        probe = target / ".write-test"
+        probe.write_text("x")
+        probe.unlink()
+    except OSError:
+        logging.getLogger(__name__).warning("Data folder %s cannot be written; using %s", target, settings.data_dir)
+        return settings
+    return replace(settings, data_dir=target, config_dir=settings.data_dir)
+
+
+def load_settings() -> Settings:
+    return with_saved_data_path(_from_environment())

@@ -20,8 +20,7 @@ def test_environment_overrides(monkeypatch, tmp_path):
     monkeypatch.setenv("READER_MAX_PAGES", "5")
     monkeypatch.setenv("READER_TTL_HOURS", "2")
     monkeypatch.setenv("READER_CROP_MODE", "0")
-    monkeypatch.setenv("READER_BACKEND_URL", "http://gpu:9210")
     monkeypatch.setenv("READER_DATA_DIR", str(tmp_path))
     settings = load_settings()
     assert settings.port == 9001 and settings.max_pages == 5 and settings.crop_mode is False
-    assert settings.ttl_seconds == 7200 and settings.docs_dir == tmp_path / "docs" and settings.backend_url == "http://gpu:9210"
+    assert settings.ttl_seconds == 7200 and settings.docs_dir == tmp_path / "docs"

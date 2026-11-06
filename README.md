@@ -6,7 +6,7 @@ Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, W
 - Tool: `tool_ocr_parse(file_id)` over MCP at `/mcp`. Returns `{text, pages, page_count, cached, message}`; `text` has a `<PAGE>` marker per page and `pages` is the same text split at the markers.
 - Limits: 50 MB, 30 pages (`READER_MAX_PAGES`), 200 MB per user. Uploads and results are deleted after 24 hours.
 - Run: `uv run python -m src.run` (first `uv sync`). Docker: `docker compose up -d --build` (the Citadel network must exist).
-- Needs SGLangModel running and a token for it (`READER_BACKEND_URL`, `READER_BACKEND_TOKEN`). `/health` returns `{"ok": true, "ready": ...}`; `ready` is true when SGLangModel answers and its model is loaded. Without it, a parse fails with "The OCR model is not available right now."
+- Needs SGLangModel running and a token for it (save a connection on the admin page). `/health` returns `{"ok": true, "ready": ...}`; `ready` is true when SGLangModel answers and its model is loaded. Without it, a parse fails with "The OCR model is not available right now."
 - Privacy: user documents sit on this machine for 24 hours, and their page images go to SGLangModel.
 - Settings: with `READER_ADMIN_PASSWORD` set, `/admin/` edits the options (pages, time limit, DPI, tokens per page, tiling, upload size, retention, quota); saved values win over `.env`.
 
@@ -43,7 +43,7 @@ With `READER_ADMIN_PASSWORD` set, `/admin/` (header `X-Admin-Password`) has four
 
 - **Status**: what the service runs and for how long, plus the model and whether SGLangModel is ready.
 - **Usage**: calls, errors and average time per user since the service started (kept in memory, so a restart clears it).
-- **Model services**: the `SGLangModel` address and token (`READER_BACKEND_URL`, `READER_BACKEND_TOKEN` are only the starting values). This service holds no model, so it has no local option. Pick **In this service** or **A model service**, set the address and token, press **Test connection** (it calls the other service with that token), then **Save**. A change applies to the next call; the token is stored in `.data/backends.json`, never shown again, and `Use the environment value` drops the saved one.
+- **Model services**: the `SGLangModel` address and token (saved on the admin page only). This service holds no model, so it has no local option. Pick **In this service** or **A model service**, set the address and token, press **Test connection** (it calls the other service with that token), then **Save**. A change applies to the next call; the token is stored in `.data/backends.json`, never shown again, and `Use the environment value` drops the saved one.
 - **Settings**: the options saved in `.data/settings.json`.
 
 

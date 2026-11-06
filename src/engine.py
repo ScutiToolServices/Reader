@@ -2,7 +2,7 @@
 
 This service holds no model. It turns an upload (image or PDF) into page images, sends them to SGLangModel in one chat
 request and returns the parsed text, one entry per page. SGLangModel adds Baidu's no-repeat n-gram logit processor, so no
-sglang wheel is needed here. Its address is `READER_BACKEND_URL`, its token `READER_BACKEND_TOKEN`.
+sglang wheel is needed here. Its address and token are saved on the admin page.
 
 shortcut: no streaming, a long document is one request that returns when the model is done. Upgrade when callers need
 partial text."""
@@ -107,7 +107,7 @@ class OCREngine:
         found = self._source()
         if not found:
             self.ready = False
-            raise EngineError("No SGLangModel address is set (the admin page or READER_BACKEND_URL)", 503)
+            raise EngineError("No SGLangModel address is set (save a connection on the admin page)", 503)
         url, token = found
         return url, ({"X-Internal-Token": token} if token else {})
 
@@ -144,7 +144,7 @@ class OCREngine:
             self.ready = False
             raise EngineError(f"SGLangModel is not reachable ({type(error).__name__})", 503) from None
         if reply.status_code in (401, 403):
-            raise EngineError("SGLangModel refused the token (check READER_BACKEND_TOKEN)", 502)
+            raise EngineError("SGLangModel refused the token (check the token saved on the admin page)", 502)
         if reply.status_code != 200:
             _log.warning("SGLangModel answered %s: %s", reply.status_code, reply.text[:300])
             raise EngineError(f"SGLangModel answered {reply.status_code}", 503 if reply.status_code == 503 else 502)

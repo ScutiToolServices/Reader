@@ -61,7 +61,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
     changeable on /admin/ while running; without it they stay as the environment set them."""
     config = config if config is not None else make_config(settings)
     base, settings = settings, live(settings, config)
-    backends = Backends(base.data_dir / "backends.json", {"ocr": {"url": base.backend_url, "token": base.backend_token}})
+    backends = Backends(base.state_dir / "backends.json")
     usage = Usage()
     engine = engine or OCREngine(source=lambda: backends.get("ocr"))
     store = DocumentStore(base.docs_dir, lambda: settings.ttl_seconds, lambda: settings.quota_bytes)

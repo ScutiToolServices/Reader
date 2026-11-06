@@ -40,12 +40,15 @@ def schema(base: Settings) -> list[Setting]:
         Setting("quota_mb", "Document storage per user (MB)", "int", base.quota_bytes // MB, minimum=1, maximum=100000),
         Setting("concurrency", "Parses at once", "int", base.concurrency, minimum=1, maximum=16, restart=True,
                 help="SGLangModel batches the work itself, so one is usually enough"),
+        Setting("data_path", "Data folder", "text", "", restart=True,
+                help=f"Where stored data (documents) goes. Empty = {base.state_dir}. Applies after a restart; files already stored are not moved. "
+                     f"Settings and saved model connections stay in the standard folder."),
     ]
 
 
 def make_config(base: Settings) -> Config | None:
     """None, so nothing is changeable at run time, unless READER_ADMIN_PASSWORD is set."""
-    return Config(base.data_dir / "settings.json", schema(base)) if base.admin_password else None
+    return Config(base.state_dir / "settings.json", schema(base)) if base.admin_password else None
 
 
 def live(base: Settings, config: Config | None):

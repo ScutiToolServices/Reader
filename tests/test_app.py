@@ -112,13 +112,13 @@ def test_the_admin_settings_need_the_password_and_can_be_changed(settings):
 
 
 def test_the_admin_page_shows_status_usage_and_the_ocr_slot(settings):
-    c = make(settings, admin_password="pw", backend_url="http://env:9210", backend_token="x")
+    c = make(settings, admin_password="pw")
     pw = {"X-Admin-Password": "pw"}
     assert c.get("/admin/status").status_code == 401
     body = c.get("/admin/status", headers=pw).json()
     assert body["service"] == "Reader" and {"label": "SGLangModel", "value": "ready"} in body["items"]
     slot = c.get("/admin/backends", headers=pw).json()["backends"][0]
-    assert (slot["key"], slot["mode"], slot["url"], slot["local"], slot["source"]) == ("ocr", "remote", "http://env:9210", False, "environment")
+    assert (slot["key"], slot["url"], slot["local"], slot["source"]) == ("ocr", "", False, "environment")
     assert c.put("/admin/backends/ocr", headers=pw, json={"url": ""}).status_code == 422  # there is no local OCR engine
     moved = c.put("/admin/backends/ocr", headers=pw, json={"url": "http://gpu:9210", "token": "t"}).json()["backends"][0]
     assert moved["url"] == "http://gpu:9210" and moved["token_set"] is True and moved["source"] == "saved"
