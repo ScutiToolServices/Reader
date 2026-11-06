@@ -11,7 +11,7 @@ from typing import Annotated
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -22,7 +22,7 @@ from src.config import PROJECT_DIR, Settings
 from src.contract import ParseResult
 from src.admin_api import Backends, Slot, Usage, register
 from src.engine import OCREngine, probe_sglang
-from src.errors import DocumentRejected, EngineFailed, IdentityRequired, OCRError, QuotaExceeded
+from src.errors import DocumentRejected, EngineFailed, FileNotFound, IdentityRequired, OCRError, QuotaExceeded
 from src.identity import owner_from_context
 from src.middleware import InternalTokenMiddleware
 from src.options import live, make_config
@@ -31,6 +31,24 @@ from src.service import OCRService
 from src.store import DocumentStore
 
 WEB_DIR = Path(os.environ.get("OCR_WEB_DIR") or PROJECT_DIR / "web")
+
+PLAYGROUND = {"operations": [{
+    "label": "Read document", "route": "/api/files", "method": "POST", "encoding": "raw", "response": "json",
+    "fields": [
+        {"key": "X-Requester-Username", "label": "Requester username", "type": "text", "location": "header",
+         "required": True, "default": "playground"},
+        {"key": "file", "label": "Document", "type": "file", "required": True,
+         "accept": "application/pdf,image/png,image/jpeg,image/webp"},
+    ],
+    "followup": {"route": "/api/parse", "method": "POST", "bodyKeys": ["file_id"], "response": "json"},
+}]}
+
+
+class ParseIn(BaseModel):
+    """An owned upload identifier; identity always comes from the public request header."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+    file_id: str = Field(pattern=r"^[a-f0-9]{32}$")
 
 INSTRUCTIONS = (
     "Document OCR (PDFs, PNG, JPEG, WebP). The user attaches a document in chat; the question then contains a line "
@@ -98,12 +116,39 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
             "size_bytes": stored.size_bytes, "expires_at": expires_at,
         })
 
+    @mcp.custom_route("/api/parse", methods=["POST"])
+    async def parse(request: Request) -> Response:
+        """Expose the MCP parse path to HTTP clients, retaining ownership, quotas, cache and inference limits."""
+        owner = request.headers.get("x-requester-username", "").strip()
+        if not owner:
+            return JSONResponse({"error": "identity_required"}, status_code=401)
+        data = bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data) > 4096:
+                return JSONResponse({"error": "too_large"}, status_code=413)
+        try:
+            body = ParseIn.model_validate_json(data)
+        except (ValueError, ValidationError):
+            return JSONResponse({"error": "invalid_request", "message": "Send an uploaded file_id."}, status_code=422)
+        try:
+            async with usage.track(owner, "parse"):
+                result = await service.parse(owner, body.file_id)
+        except OCRError as error:
+            code = (401 if isinstance(error, IdentityRequired) else 404 if isinstance(error, FileNotFound)
+                    else 413 if isinstance(error, QuotaExceeded) else 503 if isinstance(error, EngineFailed) else 400)
+            # DocumentRejected may wrap a backend rejection; keep backend text out of this public adapter.
+            message = "That document cannot be parsed. Try another document." if isinstance(error, DocumentRejected) else str(error)
+            return JSONResponse({"error": error.code, "message": message}, status_code=code)
+        return JSONResponse(result.model_dump())
+
     async def status() -> list[dict[str, str]]:
         ready = await engine.probe()
         return [{"label": "Model", "value": engine.model}, {"label": "SGLangModel", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
-        register(mcp, service="UnlimitedOCR", admin_password=base.admin_password, usage=usage, backends=backends, status=status, slots=[
+        register(mcp, service="UnlimitedOCR", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
+                 playground=PLAYGROUND, slots=[
             Slot("ocr", "Document OCR", "The SGLangModel service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
                  "so it always needs an address.", probe_sglang, "http://127.0.0.1:9210", local=False),
         ])
