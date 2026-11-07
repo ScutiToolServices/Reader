@@ -35,6 +35,9 @@ DEPLOY_PATHS = [
     "src",
     "web",
     "README.md",
+    "deployment.md",  # README links to it
+    "CHANGELOG.md",  # README links to it
+    "docs",  # README links to it
 ]
 # Left out of live: Python tests/ folders are not built into the image.
 EXCLUDE_DIRS = {"tests"}

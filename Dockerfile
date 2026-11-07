@@ -12,4 +12,5 @@ COPY web ./web
 RUN uv sync --frozen --no-dev --no-editable
 
 EXPOSE 8092
+# No model runs here: save a SGLangModel connection on the admin page.
 CMD ["python", "-m", "src.run"]

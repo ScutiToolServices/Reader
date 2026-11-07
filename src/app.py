@@ -56,6 +56,34 @@ INSTRUCTIONS = (
 )
 
 
+CONNECT = {
+    "host": "ocr",
+    "port": 8092,
+    "paths": [
+        {
+            "label": "MCP, for Armory",
+            "method": "POST",
+            "path": "/mcp"
+        },
+        {
+            "label": "Upload document",
+            "method": "POST",
+            "path": "/api/files"
+        },
+        {
+            "label": "Parse",
+            "method": "POST",
+            "path": "/api/parse"
+        },
+        {
+            "label": "Health, no token",
+            "method": "GET",
+            "path": "/health"
+        }
+    ]
+}
+
+
 def build_app(settings: Settings, engine: OCREngine | None = None, config: Config | None = None) -> Starlette:
     """`config` (default: from READER_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
     changeable on /admin/ while running; without it they stay as the environment set them."""
@@ -147,7 +175,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
         return [{"label": "Model", "value": engine.model}, {"label": "SGLangModel", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
-        register(mcp, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
+        register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
                  playground=PLAYGROUND, slots=[
             Slot("ocr", "Document OCR", "The SGLangModel service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
                  "so it always needs an address.", probe_sglang, "http://127.0.0.1:9210", local=False),
