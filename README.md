@@ -41,7 +41,7 @@ Ember also needs an upload route like Scribe's (`POST /api/attachments/audio`) t
 
 ### Releasing
 
-A plain publish (`tools\deploy.bat` option 1) only updates the `live` branch, so it is fine for test deploys. A release is a separate step: set `VERSION` (and `pyproject.toml`, to the same number), commit, then run `tools\deploy.bat` option R or `py tools\publish_live.py --release`. That publishes to `live` and tags the `main` commit `vX.Y.Z` and the live commit `live-vX.Y.Z`. `tools\make_zip.bat` then builds `zip_versions\Reader-<VERSION>.zip` and opens GitHub's new-release page for the tag.
+A plain publish (`run.bat`, Deploy, option 1) only updates the `live` branch, so it is fine for test deploys. A release is a separate step: set `VERSION` (and `pyproject.toml`, to the same number), commit, then run `run.bat`, Deploy, option R or `py tools\publish_live.py --release`. That publishes to `live` and tags the `main` commit `vX.Y.Z` and the live commit `live-vX.Y.Z`. `run.bat`, Build the release ZIP, then builds `_zip_versions\Reader-<VERSION>.zip` and opens GitHub's new-release page for the tag.
 
 ## Admin page
 
