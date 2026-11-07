@@ -24,7 +24,8 @@ from src.admin_api import Backends, Slot, Usage, register
 from src.engine import OCREngine, probe_sglang
 from src.errors import DocumentRejected, EngineFailed, FileNotFound, IdentityRequired, OCRError, QuotaExceeded
 from src.identity import owner_from_context
-from src.middleware import InternalTokenMiddleware
+from src.middleware import TokenMiddleware
+from src.tokens import TokenStore
 from src.options import live, make_config
 from src.runtime import Config
 from src.service import OCRService
@@ -90,6 +91,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
     config = config if config is not None else make_config(settings)
     base, settings = settings, live(settings, config)
     backends = Backends(base.state_dir / "backends.json")
+    tokens = TokenStore(base.state_dir / "tokens.json", "reader_")
     usage = Usage()
     engine = engine or OCREngine(source=lambda: backends.get("ocr"))
     store = DocumentStore(base.docs_dir, lambda: settings.ttl_seconds, lambda: settings.quota_bytes)
@@ -175,7 +177,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
         return [{"label": "Model", "value": engine.model}, {"label": "OCR_SGLang_Model", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
-        register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
+        register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, tokens=tokens, status=status,
                  playground=PLAYGROUND, slots=[
             Slot("ocr", "Document OCR", "The OCR_SGLang_Model service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
                  "so it always needs an address.", probe_sglang, "http://127.0.0.1:29260", local=False),
@@ -202,5 +204,5 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
     app = mcp.streamable_http_app()
     if config is not None and WEB_DIR.is_dir():
         app.router.routes.append(Mount("/admin", StaticFiles(directory=WEB_DIR, html=True)))
-    app.add_middleware(InternalTokenMiddleware, token=settings.internal_token)
+    app.add_middleware(TokenMiddleware, tokens=tokens if base.admin_password else None)
     return app

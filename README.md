@@ -21,7 +21,7 @@ Not done yet. Add this next to `scribe` in `Python/Citadel/apps/armory/configs/c
   "label": "Reader",
   "description": "OCR: reads an attached PDF or image and returns the text of every page.",
   "url": "http://127.0.0.1:29402/mcp",
-  "headers": {"X-Internal-Token": "${INTERNAL_API_TOKEN}"},
+  "headers": {"X-Internal-Token": "${READER_TOKEN}"},
   "forward_requester": true
 }
 ```
@@ -61,7 +61,7 @@ uv run pytest -q
 
 ## Try it from the admin page
 
-Open `/admin/` and use **Try it** with the service's internal API token and a requester username. The token is held only in memory, separate from admin sign-in. Requests use the ordinary public API, quotas and cache; the panel shows HTTP status, latency, output, cancellation and curl with a token placeholder. See [the web UI guide](docs/guide-web-ui.md).
+Open `/admin/` and use **Try it** with a token from the **Tokens** card and a requester username. The token is held only in memory, separate from admin sign-in. Requests use the ordinary public API, quotas and cache; the panel shows HTTP status, latency, output, cancellation and curl with a token placeholder. See [the web UI guide](docs/guide-web-ui.md).
 
 Enter the requester username and upload a PDF, PNG, JPEG or WebP. The panel first posts bytes to `POST /api/files` with `X-Requester-Username` and `X-Filename`, then sends `{file_id}` to `POST /api/parse` using the same username and public token. The parse route calls the same owned-document service, cache, quota and inference path as `tool_ocr_parse`; it returns `{text, pages, page_count, cached, message}`. Uploaded documents and results follow the normal retention policy. OCR_SGLang_Model must be reachable for inference.
 

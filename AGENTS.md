@@ -16,7 +16,7 @@ This file is the one instruction file for every coding agent; `CLAUDE.md` only i
 - Never read or print `.env`.
 - Logic lives in `service.py`, `engine.py`, `store.py`; `app.py` is glue. Tools never call an AI.
 - `engine.py` is the only code that talks to OCR_SGLang_Model (httpx async). Blocking work (PDF page counting and drawing, file IO) runs through `asyncio.to_thread`.
-- `INTERNAL_API_TOKEN` guards `/mcp` and `/api/*`; an exposed bind without it must refuse to start.
+- Tokens guard `/mcp` and `/api/*` (header `X-Internal-Token`). With `SERVICE_ADMIN_PASSWORD` set, each caller gets its own token from the admin page (`GET/POST /admin/tokens`, `DELETE /admin/tokens/{id}`; `src/tokens.py` keeps them hashed in `tokens.json` in the state folder; `src/middleware.py` checks them and answers 401, or 429 over a token's calls-per-minute). No admin password = no checks, so an exposed bind without one must refuse to start. `src/tokens.py`, `src/middleware.py`, `tests/test_tokens.py` and `tests/seed.py` are the same in all five tool services.
 - Result models end with `message`. Error messages never contain paths or backend text.
 - The owner key is the username (`_meta.requester` for tools, `X-Requester-Username` for HTTP).
 - `src/runtime.py` is shared with Bard and Scribe and copies Laya's `settings.py`: keep the copies in step. `web/index.html` is the same file as in Scribe and Bard (the service name comes from the API).

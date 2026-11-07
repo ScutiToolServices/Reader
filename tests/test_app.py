@@ -5,12 +5,17 @@ from starlette.testclient import TestClient
 
 from src.app import build_app
 from tests.conftest import FakeEngine, pdf, png
+from tests.seed import seed_token
 
 ANN = {"X-Requester-Username": "ann"}
+TOK = {**ANN, "X-Internal-Token": "secret"}  # a seeded token, for the tests that run with an admin password
 
 
 def make(settings, **changes):
-    return TestClient(build_app(replace(settings, **changes), FakeEngine()))
+    settings = replace(settings, **changes)
+    if settings.admin_password:
+        seed_token(settings, "secret")
+    return TestClient(build_app(settings, FakeEngine()))
 
 
 def test_health(settings):
@@ -44,14 +49,14 @@ def test_upload_over_quota_is_413(settings):
 
 
 def test_upload_needs_token_when_configured(settings):
-    c = make(settings, internal_token="secret")
+    c = make(settings, admin_password="pw")
     assert c.post("/api/files", content=png(), headers=ANN).status_code == 401
     assert c.post("/api/files", content=png(), headers={**ANN, "X-Internal-Token": "secret"}).status_code == 200
     assert c.get("/health").status_code == 200
 
 
 def test_parse_enforces_public_token_and_requester_identity(settings):
-    c = make(settings, internal_token="secret")
+    c = make(settings, admin_password="pw")
     body = {"file_id": "a" * 32}
     assert c.post("/api/parse", json=body, headers=ANN).status_code == 401
     assert c.post("/api/parse", json=body, headers={"X-Internal-Token": "secret"}).status_code == 401
@@ -59,16 +64,16 @@ def test_parse_enforces_public_token_and_requester_identity(settings):
 
 def test_parse_reuses_owned_document_cache_and_counts_usage(settings):
     engine = FakeEngine()
-    c = TestClient(build_app(replace(settings, admin_password="pw"), engine))
-    file_id = c.post("/api/files", content=png(), headers=ANN).json()["file_id"]
-    first = c.post("/api/parse", json={"file_id": file_id}, headers=ANN)
+    c = TestClient(build_app(seed_token(replace(settings, admin_password="pw"), "secret"), engine))
+    file_id = c.post("/api/files", content=png(), headers=TOK).json()["file_id"]
+    first = c.post("/api/parse", json={"file_id": file_id}, headers=TOK)
     assert first.status_code == 200
     assert first.json()["text"] == "<PAGE>first page<PAGE>second page"
     assert first.json()["pages"] == ["first page", "second page"]
     assert first.json()["cached"] is False
-    assert c.post("/api/parse", json={"file_id": file_id}, headers=ANN).json()["cached"] is True
+    assert c.post("/api/parse", json={"file_id": file_id}, headers=TOK).json()["cached"] is True
     assert engine.parse_calls == 1
-    wrong_owner = c.post("/api/parse", json={"file_id": file_id}, headers={"X-Requester-Username": "bob"})
+    wrong_owner = c.post("/api/parse", json={"file_id": file_id}, headers={"X-Requester-Username": "bob", "X-Internal-Token": "secret"})
     assert wrong_owner.status_code == 404 and wrong_owner.json()["error"] == "file_not_found"
     status = c.get("/admin/status", headers={"X-Admin-Password": "pw"}).json()
     assert status["usage"]["calls"] == 3
@@ -107,7 +112,7 @@ def test_the_admin_settings_need_the_password_and_can_be_changed(settings):
     assert shown["service"] == "Reader" and {row["key"] for row in shown["settings"]} >= {"max_pages", "dpi", "crop_mode"}
     saved = c.put("/admin/settings", json={"values": {"max_pages": 2}}, headers={"X-Admin-Password": "pw"})
     assert saved.status_code == 200
-    assert c.post("/api/files", content=pdf(3), headers=ANN).status_code == 400  # the new limit applies at once
+    assert c.post("/api/files", content=pdf(3), headers=TOK).status_code == 400  # the new limit applies at once
     assert c.put("/admin/settings", json={"values": {"max_pages": 0}}, headers={"X-Admin-Password": "pw"}).status_code == 422
 
 
