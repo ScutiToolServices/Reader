@@ -67,6 +67,7 @@ Enter the requester username and upload a PDF, PNG, JPEG or WebP. The panel firs
 
 ## Documentation
 
+- [Purpose: input, output and what it is for](docs/purpose.md)
 - [Deployment](deployment.md)
 - [Changelog](CHANGELOG.md)
 - [Docker on this PC](docs/guide-docker-same-device.md)
