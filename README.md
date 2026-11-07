@@ -9,7 +9,7 @@ Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, W
 
 ## Setup
 
-- Run: `uv run python -m src.run` (first `uv sync`). Docker: `docker compose up -d --build` (the Citadel network must exist).
+- Run: `run.bat run` (loads `.env`) or `uv run python -m src.run --dotenv` (first `uv sync`). Docker: `docker compose up -d --build` (the Citadel network must exist).
 - Needs SGLangModel running and a token for it (save a connection on the admin page). `/health` returns `{"ok": true, "ready": ...}`; `ready` is true when SGLangModel answers and its model is loaded. Without it, a parse fails with "The OCR model is not available right now."
 
 ## Registering in Armory
