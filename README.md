@@ -69,3 +69,6 @@ Enter the requester username and upload a PDF, PNG, JPEG or WebP. The panel firs
 
 - [Deployment](deployment.md)
 - [Changelog](CHANGELOG.md)
+- [Docker on this PC](docs/guide-docker-same-device.md)
+- [Docker on another machine](docs/guide-docker-deployment-device.md)
+- [Run without Docker](docs/guide-no-docker-same-device.md)
