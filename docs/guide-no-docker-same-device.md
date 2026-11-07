@@ -1,6 +1,6 @@
 # Reader: without Docker, on Windows
 
-Run Reader directly with Python: one process, no load balancer, listening on `127.0.0.1:8092`.
+Run Reader directly with Python: one process, no load balancer, listening on `127.0.0.1:29402`.
 
 ## Requirements
 
@@ -21,14 +21,14 @@ uv run python -m src.run
 ## Check
 
 ```bash
-curl http://127.0.0.1:8092/health
+curl http://127.0.0.1:29402/health
 ```
 
 Then open `/admin/`, save a connection to the OCR_SGLang_Model service under **Model services**, and press **Test connection**.
 
 ## Stop
 
-Ctrl+C in the terminal. Do not run this and the Docker stack together: both use port 8092.
+Ctrl+C in the terminal. Do not run this and the Docker stack together: both use port 29402.
 
 ## Tests
 

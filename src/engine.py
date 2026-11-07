@@ -96,7 +96,7 @@ class OCREngine:
     """`http` is an httpx client (a test passes a mock transport). `source` returns (url, token) of the OCR_SGLang_Model
     service on every call, so the admin page can change it live; without it the constructor's address stays."""
 
-    def __init__(self, backend_url: str = "http://127.0.0.1:9210", token: str = "", *, http: httpx.AsyncClient | None = None,
+    def __init__(self, backend_url: str = "http://127.0.0.1:29260", token: str = "", *, http: httpx.AsyncClient | None = None,
                  source: Callable[[], tuple[str, str] | None] | None = None) -> None:
         self.model = MODEL_NAME
         self._source = source or (lambda: (backend_url.rstrip("/"), token))

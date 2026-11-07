@@ -89,11 +89,11 @@ def test_the_address_is_read_on_every_call_and_an_empty_one_is_a_clear_error():
 
     from src.engine import OCREngine
 
-    target = {"now": ("http://a:9210", "t1")}
+    target = {"now": ("http://a:29260", "t1")}
     engine = OCREngine(source=lambda: target["now"])
-    assert engine._target() == ("http://a:9210", {"X-Internal-Token": "t1"})
-    target["now"] = ("http://b:9210", "")
-    assert engine._target() == ("http://b:9210", {})
+    assert engine._target() == ("http://a:29260", {"X-Internal-Token": "t1"})
+    target["now"] = ("http://b:29260", "")
+    assert engine._target() == ("http://b:29260", {})
     target["now"] = None
     with pytest.raises(EngineError, match="No OCR_SGLang_Model address") as raised:
         engine._target()
@@ -115,5 +115,5 @@ async def test_probe_sglang_checks_health_then_the_token_on_the_model_list(monke
         return httpx.Response(200, json={"data": [{"id": "m"}]})
 
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
-    assert await probe_sglang("http://s:9210", "tok") == "Connected, token accepted. The model is still loading."
+    assert await probe_sglang("http://s:29260", "tok") == "Connected, token accepted. The model is still loading."
     assert seen == [("/health", None), ("/v1/models", "tok")]

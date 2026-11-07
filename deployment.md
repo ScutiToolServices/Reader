@@ -1,6 +1,6 @@
 # Deploying Reader
 
-Reader is one HTTP and MCP service (document OCR) on port 8092. It runs no model itself: it needs a OCR_SGLang_Model connection saved on its admin page.
+Reader is one HTTP and MCP service (document OCR) on port 29402. It runs no model itself: it needs a OCR_SGLang_Model connection saved on its admin page.
 
 ## Ways to run it
 

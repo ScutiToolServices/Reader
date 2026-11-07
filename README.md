@@ -1,6 +1,6 @@
 # Reader
 
-Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, WebP) in chat; the agent calls `ocr__tool_ocr_parse` and answers from the text. The model is Baidu's [Unlimited OCR 2](https://github.com/baidu/Unlimited-OCR) (MIT license). It does not run here: this MCP server draws PDF pages with PyMuPDF and sends them in one request to **OCR_SGLang_Model** (`AI/ModelServices/OCR_SGLang_Model`, port 9210), which holds the model on the GPU.
+Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, WebP) in chat; the agent calls `ocr__tool_ocr_parse` and answers from the text. The model is Baidu's [Unlimited OCR 2](https://github.com/baidu/Unlimited-OCR) (MIT license). It does not run here: this MCP server draws PDF pages with PyMuPDF and sends them in one request to **OCR_SGLang_Model** (`AI/ModelServices/OCR_SGLang_Model`, port 29260), which holds the model on the GPU.
 
 ## Tools and API
 
@@ -20,7 +20,7 @@ Not done yet. Add this next to `scribe` in `Python/Citadel/apps/armory/configs/c
 "ocr": {
   "label": "Reader",
   "description": "OCR: reads an attached PDF or image and returns the text of every page.",
-  "url": "http://127.0.0.1:8092/mcp",
+  "url": "http://127.0.0.1:29402/mcp",
   "headers": {"X-Internal-Token": "${INTERNAL_API_TOKEN}"},
   "forward_requester": true
 }

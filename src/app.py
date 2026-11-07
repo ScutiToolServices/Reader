@@ -58,7 +58,7 @@ INSTRUCTIONS = (
 
 CONNECT = {
     "host": "ocr",
-    "port": 8092,
+    "port": 29402,
     "paths": [
         {
             "label": "MCP, for Armory",
@@ -178,7 +178,7 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
         register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
                  playground=PLAYGROUND, slots=[
             Slot("ocr", "Document OCR", "The OCR_SGLang_Model service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
-                 "so it always needs an address.", probe_sglang, "http://127.0.0.1:9210", local=False),
+                 "so it always needs an address.", probe_sglang, "http://127.0.0.1:29260", local=False),
         ])
 
         @mcp.custom_route("/admin/settings", methods=["GET", "PUT"])

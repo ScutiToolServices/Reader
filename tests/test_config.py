@@ -12,7 +12,7 @@ def test_exposed_without_token_is_flagged():
 
 def test_defaults_fit_armory_call_budget():
     settings = Settings()
-    assert settings.port == 8092 and settings.timeout_s < 120
+    assert settings.port == 29402 and settings.timeout_s < 120
 
 
 def test_environment_overrides(monkeypatch, tmp_path):

@@ -1,5 +1,5 @@
 @echo off
-REM Starts the Reader Service on port 8092 (syncs .venv with uv on each run).
+REM Starts the Reader Service on port 29402 (syncs .venv with uv on each run).
 REM LABEL: Reader Service
 REM DESCRIPTION: Document OCR MCP tool server for Citadel and Ember (needs OCR_SGLang_Model running).
 cd /d "%~dp0"

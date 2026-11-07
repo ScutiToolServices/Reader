@@ -39,7 +39,7 @@ Create `.env` (deploy option 2 copies yours, or `cp .env.example .env` and edit)
 
 ```bash
 docker compose up -d --build
-curl http://127.0.0.1:8092/health
+curl http://127.0.0.1:29402/health
 ```
 
 Then open `/admin/`, save a connection to the OCR_SGLang_Model service under **Model services**, and press **Test connection**.

@@ -63,7 +63,7 @@ def backend_engine(text: str = TEXT, status: int = 200, up: bool = True, backend
             return httpx.Response(status, text="boom")
         return httpx.Response(200, json={"choices": [{"message": {"content": text}}]})
 
-    engine = OCREngine("http://sglm:9210", token, http=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    engine = OCREngine("http://sglm:29260", token, http=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
     engine.requests, engine.headers = seen, seen_headers
     return engine
 

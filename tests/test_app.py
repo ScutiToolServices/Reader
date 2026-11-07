@@ -120,5 +120,5 @@ def test_the_admin_page_shows_status_usage_and_the_ocr_slot(settings):
     slot = c.get("/admin/backends", headers=pw).json()["backends"][0]
     assert (slot["key"], slot["url"], slot["local"], slot["source"]) == ("ocr", "", False, "environment")
     assert c.put("/admin/backends/ocr", headers=pw, json={"url": ""}).status_code == 422  # there is no local OCR engine
-    moved = c.put("/admin/backends/ocr", headers=pw, json={"url": "http://gpu:9210", "token": "t"}).json()["backends"][0]
-    assert moved["url"] == "http://gpu:9210" and moved["token_set"] is True and moved["source"] == "saved"
+    moved = c.put("/admin/backends/ocr", headers=pw, json={"url": "http://gpu:29260", "token": "t"}).json()["backends"][0]
+    assert moved["url"] == "http://gpu:29260" and moved["token_set"] is True and moved["source"] == "saved"
