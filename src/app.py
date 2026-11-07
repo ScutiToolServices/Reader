@@ -30,7 +30,7 @@ from src.runtime import Config
 from src.service import OCRService
 from src.store import DocumentStore
 
-WEB_DIR = Path(os.environ.get("READER_WEB_DIR") or PROJECT_DIR / "web")
+WEB_DIR = Path(os.environ.get("SERVICE_WEB_DIR") or PROJECT_DIR / "web")
 
 PLAYGROUND = {"operations": [{
     "label": "Read document", "route": "/api/files", "method": "POST", "encoding": "raw", "response": "json",
@@ -85,7 +85,7 @@ CONNECT = {
 
 
 def build_app(settings: Settings, engine: OCREngine | None = None, config: Config | None = None) -> Starlette:
-    """`config` (default: from READER_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
+    """`config` (default: from SERVICE_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
     changeable on /admin/ while running; without it they stay as the environment set them."""
     config = config if config is not None else make_config(settings)
     base, settings = settings, live(settings, config)

@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Breaking: common service environment variables
+
+Service-owned environment variables now use `SERVICE_*`. Old names are no longer read.
+Rename old names once in your real `.env`, Compose `environment:` block, and CI/secret settings.
+
+| Old name | New name |
+|---|---|
+| `READER_ADMIN_PASSWORD` | `SERVICE_ADMIN_PASSWORD` |
+| `READER_BIND` | `SERVICE_BIND` |
+| `READER_CONCURRENCY` | `SERVICE_CONCURRENCY` |
+| `READER_CROP_MODE` | `SERVICE_CROP_MODE` |
+| `READER_DATA_DIR` | `SERVICE_DATA_DIR` |
+| `READER_DPI` | `SERVICE_DPI` |
+| `READER_HOST` | `SERVICE_HOST` |
+| `READER_MAX_PAGES` | `SERVICE_MAX_PAGES` |
+| `READER_MAX_UPLOAD_MB` | `SERVICE_MAX_UPLOAD_MB` |
+| `READER_PORT` | `SERVICE_PORT` |
+| `READER_QUOTA_MB` | `SERVICE_QUOTA_MB` |
+| `READER_TIMEOUT_S` | `SERVICE_TIMEOUT_S` |
+| `READER_TOKENS_PER_PAGE` | `SERVICE_TOKENS_PER_PAGE` |
+| `READER_TTL_HOURS` | `SERVICE_TTL_HOURS` |
+| `READER_WEB_DIR` | `SERVICE_WEB_DIR` |
+
 - Default service port moves from 8092 to 29402. Update any explicit port in your real `.env`, saved model-service connections in `backends.json`, and browser or MCP client configurations once; model-service connection ports also move to the new model port blocks. Docker users who used the Compose default receive the new host and container ports together; explicit host-port overrides remain in effect until changed.
 - Model connection labels, Docker CONNECT hosts and documentation use the purpose-prefixed model-service names. Update saved model-service connections to the renamed load balancer hosts using the current connection defaults.
 

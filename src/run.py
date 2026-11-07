@@ -22,7 +22,7 @@ def main() -> None:
             print(".env: no file in the service folder", flush=True)
     settings = load_settings()
     if settings.exposed_without_token:
-        sys.exit("Reader refuses to start: READER_HOST is not a loopback address and INTERNAL_API_TOKEN is empty.")
+        sys.exit("Reader refuses to start: SERVICE_HOST is not a loopback address and INTERNAL_API_TOKEN is empty.")
     uvicorn.run(build_app(settings, config=make_config(settings)), host=settings.host, port=settings.port, log_level="info")
 
 

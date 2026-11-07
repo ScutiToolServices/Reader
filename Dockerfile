@@ -2,7 +2,7 @@
 # No model and no GPU here: this image calls OCR_SGLang_Model (AI/ModelServices/OCR_SGLang_Model) over HTTP.
 FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /usr/local/bin/uv
-ENV PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/opt/venv PATH="/opt/venv/bin:$PATH" READER_DATA_DIR=/data READER_HOST=0.0.0.0 READER_PORT=29402 READER_WEB_DIR=/app/web
+ENV PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/opt/venv PATH="/opt/venv/bin:$PATH" SERVICE_DATA_DIR=/data SERVICE_HOST=0.0.0.0 SERVICE_PORT=29402 SERVICE_WEB_DIR=/app/web
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./

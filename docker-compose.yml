@@ -11,13 +11,13 @@ services:
     restart: unless-stopped
     environment:
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN in .env}
-      READER_ADMIN_PASSWORD: ${READER_ADMIN_PASSWORD:-}
-      READER_MAX_PAGES: ${READER_MAX_PAGES:-30}
-      READER_TIMEOUT_S: ${READER_TIMEOUT_S:-110}
+      SERVICE_ADMIN_PASSWORD: ${SERVICE_ADMIN_PASSWORD:-}
+      SERVICE_MAX_PAGES: ${SERVICE_MAX_PAGES:-30}
+      SERVICE_TIMEOUT_S: ${SERVICE_TIMEOUT_S:-110}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "${READER_BIND:-0.0.0.0}:${READER_PORT:-29402}:29402"
+      - "${SERVICE_BIND:-0.0.0.0}:${SERVICE_PORT:-29402}:29402"
     volumes:
       - ocr_data:/data
     healthcheck:

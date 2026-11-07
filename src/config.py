@@ -53,20 +53,20 @@ class Settings:
 def _from_environment() -> Settings:
     env = os.environ.get
     return Settings(
-        host=env("READER_HOST", "127.0.0.1"),
-        port=int(env("READER_PORT", "29402")),
+        host=env("SERVICE_HOST", "127.0.0.1"),
+        port=int(env("SERVICE_PORT", "29402")),
         internal_token=env("INTERNAL_API_TOKEN", ""),
-        data_dir=Path(env("READER_DATA_DIR") or PROJECT_DIR / ".data"),
-        max_bytes=int(env("READER_MAX_UPLOAD_MB", "50")) * 1024 * 1024,
-        max_pages=int(env("READER_MAX_PAGES", "30")),
-        timeout_s=int(env("READER_TIMEOUT_S", "110")),
-        dpi=int(env("READER_DPI", "300")),
-        tokens_per_page=int(env("READER_TOKENS_PER_PAGE", "8000")),
-        crop_mode=env("READER_CROP_MODE", "1").strip().lower() in ("1", "true", "yes", "on"),
-        ttl_seconds=int(env("READER_TTL_HOURS", "24")) * 3600,
-        quota_bytes=int(env("READER_QUOTA_MB", "200")) * 1024 * 1024,
-        concurrency=int(env("READER_CONCURRENCY", "1")),
-        admin_password=env("READER_ADMIN_PASSWORD", ""),
+        data_dir=Path(env("SERVICE_DATA_DIR") or PROJECT_DIR / ".data"),
+        max_bytes=int(env("SERVICE_MAX_UPLOAD_MB", "50")) * 1024 * 1024,
+        max_pages=int(env("SERVICE_MAX_PAGES", "30")),
+        timeout_s=int(env("SERVICE_TIMEOUT_S", "110")),
+        dpi=int(env("SERVICE_DPI", "300")),
+        tokens_per_page=int(env("SERVICE_TOKENS_PER_PAGE", "8000")),
+        crop_mode=env("SERVICE_CROP_MODE", "1").strip().lower() in ("1", "true", "yes", "on"),
+        ttl_seconds=int(env("SERVICE_TTL_HOURS", "24")) * 3600,
+        quota_bytes=int(env("SERVICE_QUOTA_MB", "200")) * 1024 * 1024,
+        concurrency=int(env("SERVICE_CONCURRENCY", "1")),
+        admin_password=env("SERVICE_ADMIN_PASSWORD", ""),
     )
 
 

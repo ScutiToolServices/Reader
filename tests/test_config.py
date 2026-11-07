@@ -16,11 +16,11 @@ def test_defaults_fit_armory_call_budget():
 
 
 def test_environment_overrides(monkeypatch, tmp_path):
-    monkeypatch.setenv("READER_PORT", "9001")
-    monkeypatch.setenv("READER_MAX_PAGES", "5")
-    monkeypatch.setenv("READER_TTL_HOURS", "2")
-    monkeypatch.setenv("READER_CROP_MODE", "0")
-    monkeypatch.setenv("READER_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SERVICE_PORT", "9001")
+    monkeypatch.setenv("SERVICE_MAX_PAGES", "5")
+    monkeypatch.setenv("SERVICE_TTL_HOURS", "2")
+    monkeypatch.setenv("SERVICE_CROP_MODE", "0")
+    monkeypatch.setenv("SERVICE_DATA_DIR", str(tmp_path))
     settings = load_settings()
     assert settings.port == 9001 and settings.max_pages == 5 and settings.crop_mode is False
     assert settings.ttl_seconds == 7200 and settings.docs_dir == tmp_path / "docs"

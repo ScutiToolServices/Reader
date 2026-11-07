@@ -30,11 +30,11 @@ Ember also needs an upload route like Scribe's (`POST /api/attachments/audio`) t
 
 ## Limits worth knowing
 
-- Limits: 50 MB, 30 pages (`READER_MAX_PAGES`), 200 MB per user. Uploads and results are deleted after 24 hours.
+- Limits: 50 MB, 30 pages (`SERVICE_MAX_PAGES`), 200 MB per user. Uploads and results are deleted after 24 hours.
 - Privacy: user documents sit on this machine for 24 hours, and their page images go to OCR_SGLang_Model.
-- Settings: with `READER_ADMIN_PASSWORD` set, `/admin/` edits the options (pages, time limit, DPI, tokens per page, tiling, upload size, retention, quota); saved values win over `.env`.
+- Settings: with `SERVICE_ADMIN_PASSWORD` set, `/admin/` edits the options (pages, time limit, DPI, tokens per page, tiling, upload size, retention, quota); saved values win over `.env`.
 
-- No streaming and no partial results: a parse is one call that ends when the model is done. Armory cancels a call after 120 s, so large documents must be cut by `READER_MAX_PAGES` until the speed is measured. Nothing has run against the real model yet.
+- No streaming and no partial results: a parse is one call that ends when the model is done. Armory cancels a call after 120 s, so large documents must be cut by `SERVICE_MAX_PAGES` until the speed is measured. Nothing has run against the real model yet.
 - A long document returns all its text in one tool result, which can be large for the agent's context.
 - The `<PAGE>` marker position is taken from Baidu's README wording; check it against real output.
 - Supported languages and the model size are not stated in Baidu's README.
@@ -45,7 +45,7 @@ A plain publish (`run.bat`, Deploy, option 1) only updates the `live` branch, so
 
 ## Admin page
 
-With `READER_ADMIN_PASSWORD` set, `/admin/` (header `X-Admin-Password`) has four parts:
+With `SERVICE_ADMIN_PASSWORD` set, `/admin/` (header `X-Admin-Password`) has four parts:
 
 - **Status**: what the service runs and for how long, plus the model and whether OCR_SGLang_Model is ready.
 - **Usage**: calls, errors and average time per user since the service started (kept in memory, so a restart clears it).
