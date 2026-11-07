@@ -20,6 +20,6 @@ The browser caps uploads at **10 MiB**, displayed text at **256 KiB**, and binar
 
 ### This service's request
 
-Enter the requester username and upload a PDF, PNG, JPEG or WebP. The panel first posts bytes to `POST /api/files` with `X-Requester-Username` and `X-Filename`, then sends `{file_id}` to `POST /api/parse` using the same username and public token. The parse route calls the same owned-document service, cache, quota and inference path as `tool_ocr_parse`; it returns `{text, pages, page_count, cached, message}`. Uploaded documents and results follow the normal retention policy. SGLangModel must be reachable for inference.
+Enter the requester username and upload a PDF, PNG, JPEG or WebP. The panel first posts bytes to `POST /api/files` with `X-Requester-Username` and `X-Filename`, then sends `{file_id}` to `POST /api/parse` using the same username and public token. The parse route calls the same owned-document service, cache, quota and inference path as `tool_ocr_parse`; it returns `{text, pages, page_count, cached, message}`. Uploaded documents and results follow the normal retention policy. OCR_SGLang_Model must be reachable for inference.
 
 The public token is sent only in `X-Internal-Token`. The requester username is sent in `X-Requester-Username` and determines ownership and quota. Admin requests continue to use `X-Admin-Password`. The shared tool page learns its service-specific playground descriptor from authenticated admin status metadata. Deploy the complete `web/` directory, including `playground.js`.

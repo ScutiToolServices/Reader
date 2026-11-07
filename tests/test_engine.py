@@ -95,7 +95,7 @@ def test_the_address_is_read_on_every_call_and_an_empty_one_is_a_clear_error():
     target["now"] = ("http://b:9210", "")
     assert engine._target() == ("http://b:9210", {})
     target["now"] = None
-    with pytest.raises(EngineError, match="No SGLangModel address") as raised:
+    with pytest.raises(EngineError, match="No OCR_SGLang_Model address") as raised:
         engine._target()
     assert raised.value.status == 503
     assert asyncio.run(engine.probe()) is False  # probing with no address is not ready, not a crash

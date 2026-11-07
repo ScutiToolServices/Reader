@@ -172,12 +172,12 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
 
     async def status() -> list[dict[str, str]]:
         ready = await engine.probe()
-        return [{"label": "Model", "value": engine.model}, {"label": "SGLangModel", "value": "ready" if ready else "not ready"}]
+        return [{"label": "Model", "value": engine.model}, {"label": "OCR_SGLang_Model", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
         register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
                  playground=PLAYGROUND, slots=[
-            Slot("ocr", "Document OCR", "The SGLangModel service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
+            Slot("ocr", "Document OCR", "The OCR_SGLang_Model service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
                  "so it always needs an address.", probe_sglang, "http://127.0.0.1:9210", local=False),
         ])
 

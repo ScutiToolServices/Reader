@@ -20,7 +20,7 @@ class Settings:
     internal_token: str = ""
     data_dir: Path = PROJECT_DIR / ".data"
     config_dir: Path | None = None  # set when the data folder was moved: the folder that keeps settings.json
-    # SGLangModel (AI/ModelServices/SGLangModel), which holds the model on the GPU.
+    # OCR_SGLang_Model (AI/ModelServices/OCR_SGLang_Model), which holds the model on the GPU.
     max_bytes: int = 50 * 1024 * 1024
     # Armory cancels a tool call after 120 s, so the page limit and the time limit are tuned together. Measure on the real
     # GPU host (nothing has run against the model yet) and raise both after that.

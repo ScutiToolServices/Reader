@@ -1,7 +1,7 @@
 # Reader document OCR MCP server.
 # Start:  docker compose up -d --build        (armory reaches it at http://ocr:8092/mcp)
 # Needs a .env next to this file with INTERNAL_API_TOKEN (same value as Citadel's); see .env.example.
-# The model runs in SGLangModel (AI/ModelServices/SGLangModel); save its address and token as a connection on the admin page.
+# The model runs in OCR_SGLang_Model (AI/ModelServices/OCR_SGLang_Model); save its address and token as a connection on the admin page.
 
 name: ocr
 

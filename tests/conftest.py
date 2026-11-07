@@ -47,7 +47,7 @@ class FakeEngine:
 
 
 def backend_engine(text: str = TEXT, status: int = 200, up: bool = True, backend_ready: bool = True, token: str = "") -> OCREngine:
-    """A real OCREngine talking to a fake SGLangModel; `engine.requests` lists the JSON bodies, `engine.headers` the headers."""
+    """A real OCREngine talking to a fake OCR_SGLang_Model; `engine.requests` lists the JSON bodies, `engine.headers` the headers."""
     seen, seen_headers = [], []
 
     def handler(request: httpx.Request) -> httpx.Response:

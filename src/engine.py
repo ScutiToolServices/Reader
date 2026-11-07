@@ -1,7 +1,7 @@
-"""Document parsing with Baidu's Unlimited OCR 2, through the SGLangModel service that holds the model on the GPU.
+"""Document parsing with Baidu's Unlimited OCR 2, through the OCR_SGLang_Model service that holds the model on the GPU.
 
-This service holds no model. It turns an upload (image or PDF) into page images, sends them to SGLangModel in one chat
-request and returns the parsed text, one entry per page. SGLangModel adds Baidu's no-repeat n-gram logit processor, so no
+This service holds no model. It turns an upload (image or PDF) into page images, sends them to OCR_SGLang_Model in one chat
+request and returns the parsed text, one entry per page. OCR_SGLang_Model adds Baidu's no-repeat n-gram logit processor, so no
 sglang wheel is needed here. Its address and token are saved on the admin page.
 
 shortcut: no streaming, a long document is one request that returns when the model is done. Upgrade when callers need
@@ -93,7 +93,7 @@ def split_pages(text: str) -> list[str]:
 
 
 class OCREngine:
-    """`http` is an httpx client (a test passes a mock transport). `source` returns (url, token) of the SGLangModel
+    """`http` is an httpx client (a test passes a mock transport). `source` returns (url, token) of the OCR_SGLang_Model
     service on every call, so the admin page can change it live; without it the constructor's address stays."""
 
     def __init__(self, backend_url: str = "http://127.0.0.1:9210", token: str = "", *, http: httpx.AsyncClient | None = None,
@@ -107,7 +107,7 @@ class OCREngine:
         found = self._source()
         if not found:
             self.ready = False
-            raise EngineError("No SGLangModel address is set (save a connection on the admin page)", 503)
+            raise EngineError("No OCR_SGLang_Model address is set (save a connection on the admin page)", 503)
         url, token = found
         return url, ({"X-Internal-Token": token} if token else {})
 
@@ -142,27 +142,27 @@ class OCREngine:
             reply = await self._http.post(f"{url}/v1/chat/completions", json=payload, headers=headers)
         except httpx.HTTPError as error:
             self.ready = False
-            raise EngineError(f"SGLangModel is not reachable ({type(error).__name__})", 503) from None
+            raise EngineError(f"OCR_SGLang_Model is not reachable ({type(error).__name__})", 503) from None
         if reply.status_code in (401, 403):
-            raise EngineError("SGLangModel refused the token (check the token saved on the admin page)", 502)
+            raise EngineError("OCR_SGLang_Model refused the token (check the token saved on the admin page)", 502)
         if reply.status_code != 200:
-            _log.warning("SGLangModel answered %s: %s", reply.status_code, reply.text[:300])
-            raise EngineError(f"SGLangModel answered {reply.status_code}", 503 if reply.status_code == 503 else 502)
+            _log.warning("OCR_SGLang_Model answered %s: %s", reply.status_code, reply.text[:300])
+            raise EngineError(f"OCR_SGLang_Model answered {reply.status_code}", 503 if reply.status_code == 503 else 502)
         self.ready = True
         try:
             text = reply.json()["choices"][0]["message"]["content"] or ""
         except (ValueError, KeyError, IndexError, TypeError):
-            raise EngineError("SGLangModel sent an answer this service cannot read", 502) from None
+            raise EngineError("OCR_SGLang_Model sent an answer this service cannot read", 502) from None
         return {"text": text, "pages": split_pages(text), "page_count": len(images)}
 
 
 async def probe_sglang(url: str, token: str) -> str:
-    """The admin page's Test button for a SGLangModel address: reachable and ready, then the token on the model list."""
+    """The admin page's Test button for a OCR_SGLang_Model address: reachable and ready, then the token on the model list."""
     health = await check(url, "", "/health")
     reply = await check(url, token, "/v1/models")
     try:
         reply.json()["data"]
     except (ValueError, KeyError, TypeError):
-        raise ProbeError("That address is not a SGLangModel service.") from None
+        raise ProbeError("That address is not a OCR_SGLang_Model service.") from None
     ready = health.json().get("ready") is True if health.headers.get("content-type", "").startswith("application/json") else False
     return "Connected, token accepted." + ("" if ready else " The model is still loading.")
