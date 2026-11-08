@@ -1,6 +1,6 @@
 # Reader: Docker on a deployment machine
 
-Run Reader on a separate always-on machine (default `lex@scutiserver1.local`, folder `/media/ZimaOS-HD/Apps/Reader`). Armory and ember_api reach it over the published port.
+Run Reader on a separate always-on machine (default `lex@scutiserver1.local`, folder `/media/ZimaOS-HD/Apps/ToolServices/Reader`). Armory and ember_api reach it over the published port.
 
 ## Requirements on the machine
 
@@ -28,9 +28,9 @@ Keep your own target in the git-ignored `tools\deploy.local.ini` (copy `tools\de
 ## 2. First-time setup on the machine
 
 ```bash
-mkdir -p /media/ZimaOS-HD/Apps
-git clone -b live <your-repo-url> /media/ZimaOS-HD/Apps/Reader
-cd /media/ZimaOS-HD/Apps/Reader
+mkdir -p /media/ZimaOS-HD/Apps/ToolServices
+git clone -b live <your-repo-url> /media/ZimaOS-HD/Apps/ToolServices/Reader
+cd /media/ZimaOS-HD/Apps/ToolServices/Reader
 ```
 
 Create `.env` (deploy option 2 copies yours, or `cp .env.example .env` and edit). The variables are listed under Settings in [guide-docker-same-device.md](guide-docker-same-device.md#settings).
@@ -47,7 +47,7 @@ Then open `/admin/`, save a connection to the OCR_SGLang_Model service under **M
 ## Updating
 
 ```bash
-cd /media/ZimaOS-HD/Apps/Reader
+cd /media/ZimaOS-HD/Apps/ToolServices/Reader
 git pull
 docker compose up -d --build
 ```
