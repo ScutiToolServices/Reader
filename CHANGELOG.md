@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Admin navigation
+
+The admin page now has seven sidebar pages: Overview, Playground, Access tokens, Model connections, Runtime & settings, Usage and Connect & API. Overview reads live health and service status; links and browser history select pages. The sidebar collapses to an icon rail and remembers its display preference. Existing connections, tokens, settings and public Playground authentication keep their behavior.
+
 ### Docs: Citadel's upload route exists
 
 The README no longer says the ember_api upload route is unwritten: `POST /api/attachments/document` forwards PDFs and images to `/api/files`, and ember_web adds the `[Document file_id: ...]` line. No behaviour change in this service.

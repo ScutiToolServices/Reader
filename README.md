@@ -45,12 +45,11 @@ A plain publish (`run.bat`, Deploy, option 1) only updates the `live` branch, so
 
 ## Admin page
 
-With `SERVICE_ADMIN_PASSWORD` set, `/admin/` (header `X-Admin-Password`) has four parts:
+With `SERVICE_ADMIN_PASSWORD` set, open `/admin/` and sign in. The shared sidebar has **Overview**, **Playground**, **Access tokens**, **Model connections**, **Runtime & settings**, **Usage** and **Connect & API**. Each page has a direct URL hash. The sidebar collapses to an icon rail and remembers its display preference in this browser.
 
-- **Status**: what the service runs and for how long, plus the model and whether OCR_SGLang_Model is ready.
-- **Usage**: calls, errors and average time per user since the service started (kept in memory, so a restart clears it).
-- **Model services**: the `OCR_SGLang_Model` address and token (saved on the admin page only). This service holds no model, so it has no local option. Pick **In this service** or **A model service**, set the address and token, press **Test connection** (it calls the other service with that token), then **Save**. A change applies to the next call; the token is stored in `.data/backends.json`, never shown again, and `Use the environment value` drops the saved one.
-- **Settings**: the options saved in `.data/settings.json`.
+The Document OCR slot calls OCR_SGLang_Model, which holds the GPU model. Overview reports the model and remote readiness. Reader has no local OCR engine.
+
+Overview reads `/health` and the service status. Usage shows calls, errors and average time per requester, and resets on restart. Model connections keeps slot test/save/reset and reusable named connections. Runtime & settings saves options and marks those needing a restart. Access tokens creates and revokes caller tokens; Connect & API lists addresses and endpoints with Copy buttons. Admin authentication remains separate from public request tokens. See [the web UI guide](docs/guide-web-ui.md).
 
 ## Tests
 
@@ -61,7 +60,7 @@ uv run pytest -q
 
 ## Try it from the admin page
 
-Open `/admin/` and use **Try it** with a token from the **Tokens** card and a requester username. The token is held only in memory, separate from admin sign-in. Requests use the ordinary public API, quotas and cache; the panel shows HTTP status, latency, output, cancellation and curl with a token placeholder. See [the web UI guide](docs/guide-web-ui.md).
+Open `/admin/#playground` and use **Playground** with a token from **Access tokens** and a requester username. The token is held only in memory, separate from admin sign-in. Requests use the ordinary public API, quotas and cache; the panel shows HTTP status, latency, output, cancellation and curl with a token placeholder. See [the web UI guide](docs/guide-web-ui.md).
 
 Enter the requester username and upload a PDF, PNG, JPEG or WebP. The panel first posts bytes to `POST /api/files` with `X-Requester-Username` and `X-Filename`, then sends `{file_id}` to `POST /api/parse` using the same username and public token. The parse route calls the same owned-document service, cache, quota and inference path as `tool_ocr_parse`; it returns `{text, pages, page_count, cached, message}`. Uploaded documents and results follow the normal retention policy. OCR_SGLang_Model must be reachable for inference.
 
