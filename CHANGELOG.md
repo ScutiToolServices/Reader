@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Docs: Citadel's upload route exists
+
+The README no longer says the ember_api upload route is unwritten: `POST /api/attachments/document` forwards PDFs and images to `/api/files`, and ember_web adds the `[Document file_id: ...]` line. No behaviour change in this service.
+
 ### Breaking: callers use admin-page tokens, not `INTERNAL_API_TOKEN`
 
 `INTERNAL_API_TOKEN` is no longer read. Set `SERVICE_ADMIN_PASSWORD`, open `/admin/`, make one token per caller on the new **Tokens** card (stored hashed in `tokens.json` in the data folder; sent in `X-Internal-Token`) and put it in the caller's configuration (Armory: the extension's `headers`). A token can carry a calls-per-minute limit and an expiry, and **Revoke** cuts a caller off at once. Without an admin password there are no checks, and the service refuses to start on a non-loopback host.

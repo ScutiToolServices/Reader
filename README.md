@@ -26,7 +26,7 @@ Not done yet. Add this next to `scribe` in `Python/Citadel/apps/armory/configs/c
 }
 ```
 
-Ember also needs an upload route like Scribe's (`POST /api/attachments/audio`) that forwards a document to `/api/files` and adds a `[Document file_id: ...]` line to the question. That lives in ember_api and is not written.
+Citadel's ember_api has that route: `POST /api/attachments/document` forwards a PDF or image (20 MB cap) to `/api/files` with the requester and this service's token (`READER_TOKEN` in ember_api's `.env`). ember_web adds the `[Document file_id: ...]` line next to its pdf_merger line, and skips it when Reader is off or refuses the file.
 
 ## Limits worth knowing
 

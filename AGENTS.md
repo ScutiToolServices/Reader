@@ -1,6 +1,6 @@
 # Reader
 
-Document OCR MCP server for Citadel and Ember. A standalone service on port 29402, to be registered in Armory as the `ocr` extension (not done yet; the entry is in `README.md`). Counterpart of Scribe (`../Scribe`, speech to text) and Bard (`../Bard`). It holds no model: it calls `AI/ModelServices/OCR_SGLang_Model`, which runs Baidu's Unlimited OCR 2 on the GPU.
+Document OCR MCP server for Citadel and Ember. A standalone service on port 29402, registered in Citadel's Armory as the `ocr` extension (`READER_TOKEN` in Armory's `.env`; ember_api uploads through `POST /api/attachments/document`). Counterpart of Scribe (`../Scribe`, speech to text) and Bard (`../Bard`). It holds no model: it calls `AI/ModelServices/OCR_SGLang_Model`, which runs Baidu's Unlimited OCR 2 on the GPU.
 
 ## Agent instructions
 This file is the one instruction file for every coding agent; `CLAUDE.md` only imports it (`@AGENTS.md`). Edit this file, never `CLAUDE.md`.
