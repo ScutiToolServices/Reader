@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Model connections page redesign
+
+Each model slot now shows its state first (saved connection, direct address, runs in this service, or not connected) with the address and whether a token is saved. Editing opens in place: pick a source (saved connection, direct address or in this service) and only the fields for that source appear. A slot that has not been connected opens its editor. Test connection also updates the slot's state. Saved connections are a table with credentials and the slots using them; Add connection opens the form only on request, and a connection in use has its Delete button disabled. The admin API is unchanged.
+
+- Document OCR can use OCR_Paddle_Model (port 29262) as well as OCR_SGLang_Model. The engine reads the backend's `model` from `/health`: `paddleocr-vl` or `pp-ocrv5` gets one `POST /v1/ocr` per page (pages joined with `<PAGE>` like Unlimited OCR 2's), anything else keeps the single chat request. A kept parse is keyed by the model that made it, and the backend is asked again when the saved address changes. The Test connection button checks `/v1/device` for OCR_Paddle_Model. Not run against a real OCR_Paddle_Model yet.
+
 ### Admin navigation
 
 The admin page now has seven sidebar pages: Overview, Playground, Access tokens, Model connections, Runtime & settings, Usage and Connect & API. Overview reads live health and service status; links and browser history select pages. The sidebar collapses to an icon rail and remembers its display preference. Existing connections, tokens, settings and public Playground authentication keep their behavior.
