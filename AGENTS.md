@@ -1,13 +1,13 @@
 # Reader
 
-Document OCR MCP server for Citadel and Ember. A standalone service on port 29402, registered in Citadel's Armory as the `ocr` extension (`READER_TOKEN` in Armory's `.env`; ember_api uploads through `POST /api/attachments/document`). Counterpart of Scribe (`../Scribe`, speech to text) and Bard (`../Bard`). It holds no model: it calls `AI/ModelServices/OCR_SGLang_Model`, which runs Baidu's Unlimited OCR 2 on the GPU.
+Document OCR MCP server for Citadel and Ember. A standalone service on port 29402, registered in Citadel's Armory as the `ocr` extension (`READER_TOKEN` in Armory's `.env`; ember_api uploads through `POST /api/attachments/document`). Counterpart of Scribe (`../Scribe`, speech to text) and Bard (`../Bard`). It holds no model: it calls `AI/ModelServices/OCR_Paddle_Model` (PaddleOCR-VL on a GPU, PP-OCRv5 on the CPU) or `AI/ModelServices/OCR_SGLang_Model` (Baidu's Unlimited OCR 2 on the GPU), whichever the `ocr` slot points at.
 
 ## Agent instructions
 This file is the one instruction file for every coding agent; `CLAUDE.md` only imports it (`@AGENTS.md`). Edit this file, never `CLAUDE.md`.
 
 ## Commands (from this folder, managed by uv)
 - Install: `uv sync` (on this machine set `UV_CACHE_DIR=.uv_cache UV_LINK_MODE=copy`; the default cache is on another drive. An old `.venv` here is stale since the folder moved; use `UV_PROJECT_ENVIRONMENT=.venv_ocr` or delete it)
-- Test: `uv run pytest -q` (no GPU needed; OCR_SGLang_Model is faked)
+- Test: `uv run pytest -q` (no GPU needed; both model services are faked)
 - Run: `run.bat run`, or `uv run python -m src.run` (add `--dotenv` to load `.env`), or `docker compose up -d --build`
 
 ## Rules
@@ -15,7 +15,7 @@ This file is the one instruction file for every coding agent; `CLAUDE.md` only i
 - Data folder: `Settings.data_dir` holds documents; the admin setting `data_path` (restart, `src/config.py` `with_saved_data_path`) moves it at the next start and keeps `settings.json` and `backends.json` in `Settings.state_dir` (the first folder). No `.env` variable; `SERVICE_DATA_DIR` is read only as the base folder (Docker).
 - Never read or print `.env`.
 - Logic lives in `service.py`, `engine.py`, `store.py`; `app.py` is glue. Tools never call an AI.
-- `engine.py` is the only code that talks to OCR_SGLang_Model (httpx async). Blocking work (PDF page counting and drawing, file IO) runs through `asyncio.to_thread`.
+- `engine.py` is the only code that talks to the model services (httpx async). It learns which one answers from `model` in `/health` (`paddleocr-vl` or `pp-ocrv5` = OCR_Paddle_Model: one `POST /v1/ocr` per page, pages joined with `<PAGE>`; anything else = OCR_SGLang_Model's chat request) and asks again when the address changes. Blocking work (PDF page counting and drawing, file IO) runs through `asyncio.to_thread`.
 - Tokens guard `/mcp` and `/api/*` (header `X-Internal-Token`). With `SERVICE_ADMIN_PASSWORD` set, each caller gets its own token from the admin page (`GET/POST /admin/tokens`, `DELETE /admin/tokens/{id}`; `src/tokens.py` keeps them hashed in `tokens.json` in the state folder; `src/middleware.py` checks them and answers 401, or 429 over a token's calls-per-minute). No admin password = no checks, so an exposed bind without one must refuse to start. `src/tokens.py`, `src/middleware.py`, `tests/test_tokens.py` and `tests/seed.py` are the same in all five tool services.
 - Result models end with `message`. Error messages never contain paths or backend text.
 - The owner key is the username (`_meta.requester` for tools, `X-Requester-Username` for HTTP).

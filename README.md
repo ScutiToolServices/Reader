@@ -1,6 +1,6 @@
 # Reader
 
-Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, WebP) in chat; the agent calls `ocr__tool_ocr_parse` and answers from the text. The model is Baidu's [Unlimited OCR 2](https://github.com/baidu/Unlimited-OCR) (MIT license). It does not run here: this MCP server draws PDF pages with PyMuPDF and sends them in one request to **OCR_SGLang_Model** (`AI/ModelServices/OCR_SGLang_Model`, port 29260), which holds the model on the GPU.
+Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, WebP) in chat; the agent calls `ocr__tool_ocr_parse` and answers from the text. It does not run a model here: this MCP server draws PDF pages with PyMuPDF and sends them to a model service, which you pick on the admin page. **OCR_Paddle_Model** (`AI/ModelServices/OCR_Paddle_Model`, port 29262) uses PaddleOCR-VL on a capable GPU and PP-OCRv5 on the CPU otherwise, one call per page. **OCR_SGLang_Model** (`AI/ModelServices/OCR_SGLang_Model`, port 29260) holds Baidu's [Unlimited OCR 2](https://github.com/baidu/Unlimited-OCR) (MIT license) on the GPU and gets all pages in one request. Reader reads which one answers from its `/health`. The CPU model returns plain text lines; the GPU models return Markdown with layout.
 
 ## Tools and API
 
@@ -10,7 +10,7 @@ Document OCR for Citadel and Ember. A user attaches a PDF or image (PNG, JPEG, W
 ## Setup
 
 - Run: `run.bat run` (loads `.env`) or `uv run python -m src.run --dotenv` (first `uv sync`). Docker: `docker compose up -d --build` (the Citadel network must exist).
-- Needs OCR_SGLang_Model running and a token for it (save a connection on the admin page). `/health` returns `{"ok": true, "ready": ...}`; `ready` is true when OCR_SGLang_Model answers and its model is loaded. Without it, a parse fails with "The OCR model is not available right now."
+- Needs OCR_Paddle_Model or OCR_SGLang_Model running and a token for it (save a connection on the admin page). `/health` returns `{"ok": true, "ready": ...}`; `ready` is true when the model service answers and its model is loaded. Without it, a parse fails with "The OCR model is not available right now."
 
 ## Registering in Armory
 
@@ -31,7 +31,7 @@ Citadel's ember_api has that route: `POST /api/attachments/document` forwards a 
 ## Limits worth knowing
 
 - Limits: 50 MB, 30 pages (`SERVICE_MAX_PAGES`), 200 MB per user. Uploads and results are deleted after 24 hours.
-- Privacy: user documents sit on this machine for 24 hours, and their page images go to OCR_SGLang_Model.
+- Privacy: user documents sit on this machine for 24 hours, and their page images go to the model service.
 - Settings: with `SERVICE_ADMIN_PASSWORD` set, `/admin/` edits the options (pages, time limit, DPI, tokens per page, tiling, upload size, retention, quota); saved values win over `.env`.
 
 - No streaming and no partial results: a parse is one call that ends when the model is done. Armory cancels a call after 120 s, so large documents must be cut by `SERVICE_MAX_PAGES` until the speed is measured. Nothing has run against the real model yet.
@@ -47,7 +47,7 @@ A plain publish (`run.bat`, Deploy, option 1) only updates the `live` branch, so
 
 With `SERVICE_ADMIN_PASSWORD` set, open `/admin/` and sign in. The shared sidebar has **Overview**, **Playground**, **Access tokens**, **Model connections**, **Runtime & settings**, **Usage** and **Connect & API**. Each page has a direct URL hash. The sidebar collapses to an icon rail and remembers its display preference in this browser.
 
-The Document OCR slot calls OCR_SGLang_Model, which holds the GPU model. Overview reports the model and remote readiness. Reader has no local OCR engine.
+The Document OCR slot calls the model service (OCR_Paddle_Model or OCR_SGLang_Model). Overview reports the model and remote readiness. Reader has no local OCR engine.
 
 Overview reads `/health` and the service status. Usage shows calls, errors and average time per requester, and resets on restart. Model connections keeps slot test/save/reset and reusable named connections. Runtime & settings saves options and marks those needing a restart. Access tokens creates and revokes caller tokens; Connect & API lists addresses and endpoints with Copy buttons. Admin authentication remains separate from public request tokens. See [the web UI guide](docs/guide-web-ui.md).
 

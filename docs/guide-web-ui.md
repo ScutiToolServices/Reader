@@ -22,7 +22,7 @@ Open **Model connections**, choose a saved connection or **Another address**, en
 
 Named connections can be reused by slots. Editing one updates the slots that use it; a connection in use cannot be deleted. **Disconnect slot** clears its saved connection. These remote-only services need a connection before inference works.
 
-The Document OCR slot calls OCR_SGLang_Model, which holds the GPU model. Overview reports the model and remote readiness. Reader has no local OCR engine.
+The Document OCR slot calls the model service (OCR_Paddle_Model or OCR_SGLang_Model). Overview reports the model and remote readiness. Reader has no local OCR engine.
 
 ## Runtime & settings and Usage
 

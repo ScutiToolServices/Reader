@@ -121,7 +121,7 @@ def test_the_admin_page_shows_status_usage_and_the_ocr_slot(settings):
     pw = {"X-Admin-Password": "pw"}
     assert c.get("/admin/status").status_code == 401
     body = c.get("/admin/status", headers=pw).json()
-    assert body["service"] == "Reader" and {"label": "OCR_SGLang_Model", "value": "ready"} in body["items"]
+    assert body["service"] == "Reader" and {"label": "OCR model service", "value": "ready"} in body["items"]
     slot = c.get("/admin/backends", headers=pw).json()["backends"][0]
     assert (slot["key"], slot["url"], slot["local"], slot["source"]) == ("ocr", "", False, "environment")
     assert c.put("/admin/backends/ocr", headers=pw, json={"url": ""}).status_code == 422  # there is no local OCR engine

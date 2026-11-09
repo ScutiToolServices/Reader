@@ -21,7 +21,7 @@ from starlette.staticfiles import StaticFiles
 from src.config import PROJECT_DIR, Settings
 from src.contract import ParseResult
 from src.admin_api import Backends, Slot, Usage, register
-from src.engine import OCREngine, probe_sglang
+from src.engine import OCREngine, probe_backend
 from src.errors import DocumentRejected, EngineFailed, FileNotFound, IdentityRequired, OCRError, QuotaExceeded
 from src.identity import owner_from_context
 from src.middleware import TokenMiddleware
@@ -174,13 +174,13 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
 
     async def status() -> list[dict[str, str]]:
         ready = await engine.probe()
-        return [{"label": "Model", "value": engine.model}, {"label": "OCR_SGLang_Model", "value": "ready" if ready else "not ready"}]
+        return [{"label": "Model", "value": engine.model}, {"label": "OCR model service", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
         register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, tokens=tokens, status=status,
                  playground=PLAYGROUND, slots=[
-            Slot("ocr", "Document OCR", "The OCR_SGLang_Model service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
-                 "so it always needs an address.", probe_sglang, "http://127.0.0.1:29260", local=False),
+            Slot("ocr", "Document OCR", "The model service that does the OCR: OCR_Paddle_Model (PaddleOCR-VL on a GPU or PP-OCRv5 on the CPU, port 29262) or "
+                 "OCR_SGLang_Model (Baidu's Unlimited OCR 2 on the GPU, port 29260). This service holds no model, so it always needs an address.", probe_backend, "http://127.0.0.1:29260", local=False),
         ])
 
         @mcp.custom_route("/admin/settings", methods=["GET", "PUT"])
