@@ -1,6 +1,6 @@
 """Settings changed on the admin page, kept in a JSON file in the data folder so they survive a restart.
 
-The first half (load .. Config) is the same file in Bard, Scribe and UnlimitedOCR, and a copy of Laya's `settings.py`; keep them
+The first half (load .. Config) is the same file in Bard, Scribe and Reader, and a copy of Laya's `settings.py`; keep them
 in step. `options.py` holds what is specific to a service."""
 
 from __future__ import annotations
@@ -162,3 +162,17 @@ class LiveSettings:
 def as_getter(value: int | float | Callable[[], Any]) -> Callable[[], Any]:
     """A fixed number or a function, as a function: lets a class take either a constant or a live value."""
     return value if callable(value) else (lambda: value)
+
+
+def load_env_file(path: str | os.PathLike[str]) -> list[str]:
+    """Sets the variables of a .env file that the environment does not already have and returns their names.
+
+    A real environment variable always wins. The values are never returned or printed."""
+    from dotenv import dotenv_values
+
+    loaded = []
+    for key, value in dotenv_values(path).items():
+        if value is not None and key not in os.environ:
+            os.environ[key] = value
+            loaded.append(key)
+    return loaded

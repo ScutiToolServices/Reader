@@ -1,4 +1,4 @@
-"""The UnlimitedOCR server: one MCP tool, a document upload route and a health check."""
+"""The Reader server: one MCP tool, a document upload route and a health check."""
 
 from __future__ import annotations
 
@@ -21,16 +21,17 @@ from starlette.staticfiles import StaticFiles
 from src.config import PROJECT_DIR, Settings
 from src.contract import ParseResult
 from src.admin_api import Backends, Slot, Usage, register
-from src.engine import OCREngine, probe_sglang
+from src.engine import OCREngine, probe_backend
 from src.errors import DocumentRejected, EngineFailed, FileNotFound, IdentityRequired, OCRError, QuotaExceeded
 from src.identity import owner_from_context
-from src.middleware import InternalTokenMiddleware
+from src.middleware import TokenMiddleware
+from src.tokens import TokenStore
 from src.options import live, make_config
 from src.runtime import Config
 from src.service import OCRService
 from src.store import DocumentStore
 
-WEB_DIR = Path(os.environ.get("OCR_WEB_DIR") or PROJECT_DIR / "web")
+WEB_DIR = Path(os.environ.get("SERVICE_WEB_DIR") or PROJECT_DIR / "web")
 
 PLAYGROUND = {"operations": [{
     "label": "Read document", "route": "/api/files", "method": "POST", "encoding": "raw", "response": "json",
@@ -56,12 +57,41 @@ INSTRUCTIONS = (
 )
 
 
+CONNECT = {
+    "host": "ocr",
+    "port": 29402,
+    "paths": [
+        {
+            "label": "MCP, for Armory",
+            "method": "POST",
+            "path": "/mcp"
+        },
+        {
+            "label": "Upload document",
+            "method": "POST",
+            "path": "/api/files"
+        },
+        {
+            "label": "Parse",
+            "method": "POST",
+            "path": "/api/parse"
+        },
+        {
+            "label": "Health, no token",
+            "method": "GET",
+            "path": "/health"
+        }
+    ]
+}
+
+
 def build_app(settings: Settings, engine: OCREngine | None = None, config: Config | None = None) -> Starlette:
-    """`config` (default: from OCR_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
+    """`config` (default: from SERVICE_ADMIN_PASSWORD, see options.make_config) makes the options in options.py
     changeable on /admin/ while running; without it they stay as the environment set them."""
     config = config if config is not None else make_config(settings)
     base, settings = settings, live(settings, config)
-    backends = Backends(base.data_dir / "backends.json", {"ocr": {"url": base.backend_url, "token": base.backend_token}})
+    backends = Backends(base.state_dir / "backends.json")
+    tokens = TokenStore(base.state_dir / "tokens.json", "reader_")
     usage = Usage()
     engine = engine or OCREngine(source=lambda: backends.get("ocr"))
     store = DocumentStore(base.docs_dir, lambda: settings.ttl_seconds, lambda: settings.quota_bytes)
@@ -144,13 +174,13 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
 
     async def status() -> list[dict[str, str]]:
         ready = await engine.probe()
-        return [{"label": "Model", "value": engine.model}, {"label": "SGLangModel", "value": "ready" if ready else "not ready"}]
+        return [{"label": "Model", "value": engine.model}, {"label": "OCR model service", "value": "ready" if ready else "not ready"}]
 
     if config is not None:
-        register(mcp, service="UnlimitedOCR", admin_password=base.admin_password, usage=usage, backends=backends, status=status,
+        register(mcp, connect=CONNECT, service="Reader", admin_password=base.admin_password, usage=usage, backends=backends, tokens=tokens, status=status,
                  playground=PLAYGROUND, slots=[
-            Slot("ocr", "Document OCR", "The SGLangModel service that holds Baidu's Unlimited OCR 2 on the GPU. This service holds no model, "
-                 "so it always needs an address.", probe_sglang, "http://127.0.0.1:9210", local=False),
+            Slot("ocr", "Document OCR", "The model service that does the OCR: OCR_Paddle_Model (PaddleOCR-VL on a GPU or PP-OCRv5 on the CPU, port 29262) or "
+                 "OCR_SGLang_Model (Baidu's Unlimited OCR 2 on the GPU, port 29260). This service holds no model, so it always needs an address.", probe_backend, "http://127.0.0.1:29260", local=False),
         ])
 
         @mcp.custom_route("/admin/settings", methods=["GET", "PUT"])
@@ -169,10 +199,10 @@ def build_app(settings: Settings, engine: OCREngine | None = None, config: Confi
                     await asyncio.to_thread(config.set, values)
                 except ValueError as error:
                     return JSONResponse({"detail": str(error)}, status_code=422)
-            return JSONResponse({"service": "UnlimitedOCR", "settings": config.describe()})
+            return JSONResponse({"service": "Reader", "settings": config.describe()})
 
     app = mcp.streamable_http_app()
     if config is not None and WEB_DIR.is_dir():
         app.router.routes.append(Mount("/admin", StaticFiles(directory=WEB_DIR, html=True)))
-    app.add_middleware(InternalTokenMiddleware, token=settings.internal_token)
+    app.add_middleware(TokenMiddleware, tokens=tokens if base.admin_password else None)
     return app

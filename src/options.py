@@ -1,4 +1,4 @@
-"""The UnlimitedOCR options the admin page can change. The default shown is the value at start (.env or built in), which
+"""The Reader options the admin page can change. The default shown is the value at start (.env or built in), which
 load_settings already read; a saved value wins over it."""
 
 from __future__ import annotations
@@ -39,13 +39,16 @@ def schema(base: Settings) -> list[Setting]:
         Setting("ttl_hours", "Keep uploads for (hours)", "int", base.ttl_seconds // 3600, minimum=1, maximum=8760),
         Setting("quota_mb", "Document storage per user (MB)", "int", base.quota_bytes // MB, minimum=1, maximum=100000),
         Setting("concurrency", "Parses at once", "int", base.concurrency, minimum=1, maximum=16, restart=True,
-                help="SGLangModel batches the work itself, so one is usually enough"),
+                help="OCR_SGLang_Model batches the work itself, so one is usually enough"),
+        Setting("data_path", "Data folder", "text", "", restart=True,
+                help=f"Where stored data (documents) goes. Empty = {base.state_dir}. Applies after a restart; files already stored are not moved. "
+                     f"Settings and saved model connections stay in the standard folder."),
     ]
 
 
 def make_config(base: Settings) -> Config | None:
-    """None, so nothing is changeable at run time, unless OCR_ADMIN_PASSWORD is set."""
-    return Config(base.data_dir / "settings.json", schema(base)) if base.admin_password else None
+    """None, so nothing is changeable at run time, unless SERVICE_ADMIN_PASSWORD is set."""
+    return Config(base.state_dir / "settings.json", schema(base)) if base.admin_password else None
 
 
 def live(base: Settings, config: Config | None):
